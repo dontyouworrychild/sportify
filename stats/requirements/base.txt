@@ -1,0 +1,7 @@
+Django==4.2.3
+djangorestframework==3.14.0
+psycopg2==2.9.6 # change to psycopg2-binary in dev, and psycopg2 in prod
+djangorestframework-simplejwt==5.2.2
+pyotp==2.8.0
+celery[redis]==5.2.7
+flower==2.0.0

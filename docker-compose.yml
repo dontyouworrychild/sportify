@@ -1,0 +1,64 @@
+version: '3.9'
+
+services:
+  stats:
+    build: 
+      context: .
+      dockerfile: docker/dev/Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./stats:/stats
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env.dev
+    depends_on:
+      - db
+
+  db:
+    image: postgres:14.6-alpine
+    env_file:
+      - ./.env.dev.db
+
+
+  redis:
+    image: redis:7.0.5-alpine
+    hostname: redis
+    ports:
+      - "6379:6379"
+
+  
+  worker:
+    build:
+      context: .
+      dockerfile: docker/dev/Dockerfile
+    hostname: worker
+    entrypoint: celery 
+    command: -A core.celery.APP worker --loglevel=info
+    volumes:
+      - ./stats:/stats
+    links:
+      - redis
+    depends_on:
+      - redis
+      - db
+    env_file:
+      - ./.env.dev
+
+  flower:
+    build:
+      context: .
+      dockerfile: docker/dev/Dockerfile
+    hostname: flower
+    entrypoint: celery
+    command: -A core.celery flower
+    volumes:
+      - ./stats:/stats
+    env_file:
+      - ./.env.dev
+    links:
+      - redis
+    depends_on:
+      - redis
+    ports:
+      - "5555:5555" 
