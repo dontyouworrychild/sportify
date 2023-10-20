@@ -189,10 +189,6 @@ class CompetitionViewsets(viewsets.ModelViewSet):
         prev_level = []
         current_level = []
 
-        print(participants)
-        # next_players = []
-
-        # assert len(participants) > 0
         if len(participants) == 0:
             return Response({"message": "No games in {age_category} - {weight_category}"}, status=status.HTTP_200_OK)
         

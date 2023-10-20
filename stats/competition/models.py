@@ -48,18 +48,15 @@ class Participant(models.Model):
 
     def __str__(self) -> str:
         return f"{self.participant.first_name} {self.participant.last_name} - ({self.participant.club.name}, {self.participant.club.location})"
-
+    
 class Game(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     competition = models.ForeignKey(Competition, related_name='games', on_delete=models.CASCADE)
-    red_corner = models.ForeignKey(Participant, null=True, blank=True, related_name='fights_red', on_delete=models.SET_NULL)
-    blue_corner = models.ForeignKey(Participant, null=True, blank=True, related_name='fights_blue', on_delete=models.SET_NULL)
+    red_corner = models.ForeignKey(Participant, null=True, blank=True, related_name='fights', on_delete=models.SET_NULL)
+    blue_corner = models.ForeignKey(Participant, null=True, blank=True, related_name='fights', on_delete=models.SET_NULL)
     parent = models.ForeignKey('Game', null=True, on_delete=models.SET_NULL, related_name="parent_fight")
     index = models.IntegerField(default=1)
-    # fight1 = models.ForeignKey('Game', null=True, on_delete=models.SET_NULL, related_name="fight_1")
-    # fight2 = models.ForeignKey('Game', null=True, on_delete=models.SET_NULL, related_name="fight_2")
     level = models.IntegerField(default=1)
-    # empty = models.BooleanField(default=False)
     winner = models.ForeignKey(Participant, null=True, blank=True, related_name='won_games', on_delete=models.SET_NULL)
     '''
     WIN_TYPE_CHOICES = (
@@ -73,9 +70,6 @@ class Game(models.Model):
 
     age_category = models.CharField(max_length=5, choices=AGE_CATEGORY_CHOICE)
     weight_category = models.CharField(max_length=5, choices=WEIGHT_CATEGORY_CHOICE)
-
-    # def __str__(self) -> str:
-        
 
     def __str__(self) -> str:
         if self.red_corner is not None and self.blue_corner is not None:
