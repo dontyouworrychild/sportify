@@ -55,10 +55,34 @@ class Game(models.Model):
     red_corner = models.ForeignKey(Participant, null=True, blank=True, related_name='fights_red', on_delete=models.SET_NULL)
     blue_corner = models.ForeignKey(Participant, null=True, blank=True, related_name='fights_blue', on_delete=models.SET_NULL)
     parent = models.ForeignKey('Game', null=True, on_delete=models.SET_NULL, related_name="parent_fight")
-    fight1 = models.ForeignKey('Game', null=True, on_delete=models.SET_NULL, related_name="fight_1")
-    fight2 = models.ForeignKey('Game', null=True, on_delete=models.SET_NULL, related_name="fight_2")
-    level = models.IntegerField(default=0)
-    empty = models.BooleanField(default=False)
+    index = models.IntegerField(default=1)
+    # fight1 = models.ForeignKey('Game', null=True, on_delete=models.SET_NULL, related_name="fight_1")
+    # fight2 = models.ForeignKey('Game', null=True, on_delete=models.SET_NULL, related_name="fight_2")
+    level = models.IntegerField(default=1)
+    # empty = models.BooleanField(default=False)
+    winner = models.ForeignKey(Participant, null=True, blank=True, related_name='won_games', on_delete=models.SET_NULL)
+    '''
+    WIN_TYPE_CHOICES = (
+        ('knockout', 'Knockout'),
+        ('point', 'By points'),
+        ('no', 'Did not start')
+    )
+    win_type = models.CharField(max_length=15, choices=WIN_TYPE_CHOICES)
+    '''
+
 
     age_category = models.CharField(max_length=5, choices=AGE_CATEGORY_CHOICE)
     weight_category = models.CharField(max_length=5, choices=WEIGHT_CATEGORY_CHOICE)
+
+    # def __str__(self) -> str:
+        
+
+    def __str__(self) -> str:
+        if self.red_corner is not None and self.blue_corner is not None:
+            return f"{self.red_corner.participant.first_name} {self.red_corner.participant.last_name} - {self.blue_corner.participant.first_name} {self.blue_corner.participant.last_name} : {self.level}"
+        elif self.red_corner is not None:
+            return f"{self.red_corner.participant.first_name} {self.red_corner.participant.last_name} - None : {self.level}"
+        elif self.blue_corner is not None:
+            return f"None - {self.blue_corner.participant.first_name} {self.blue_corner.participant.last_name} : {self.level}"
+        
+        return f"{self.id} : {self.level}"

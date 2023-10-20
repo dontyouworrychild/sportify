@@ -10,6 +10,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from student.models import Student
 
+import math
+
 CATEGORIES = {
     '6-7': ['24kg', '28kg', '32kg', '36kg', '40kg', '44kg', '48kg'],
     '8-9': ['28kg', '32kg', '36kg', '40kg', '44kg', '48kg', '52kg'],
@@ -129,51 +131,31 @@ class CompetitionViewsets(viewsets.ModelViewSet):
         competition = self.get_object()
         age_category = request.query_params.get('age')
         weight_category = request.query_params.get('weight')
+        level = request.query_params.get('level')
         
         games = Game.objects.filter(competition=competition)
 
-        if age_category and weight_category:
+        if age_category and weight_category and level:
             games = Game.objects.filter(
                     Q(age_category=age_category) & 
-                    Q(weight_category=weight_category) 
+                    Q(weight_category=weight_category) &
+                    Q(level=level) 
                 )
         
         serializer = GameSerializer(games, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def nextPowerOf2(self, length):
+        # Calculate log2 of N
+        if (length < 1):
+            return 0
+        a = math.log2(length)
+        a = int(a)
+ 
+        if 2**a == length:
+            return length
     
-    # @action(detail=True, methods=['get'], url_name='list_games')
-    # def list_games(self, request, pk=None):
-    #     competition = self.get_object()
-    #     games = Game.objects.filter(competition=competition)
-    #     max_lvl = 0
-    #     for game in games:
-    #         max_lvl = max(max_lvl, game.level)
-
-    #     # q = deque(Game)
-    #     # q.append(games[0])
-    #     q = deque(Game)
-    #     q.append(games[0])
-
-
-    #     gamesList = list(Game)
-    #     while q.count > 0:
-    #         game = q[0]
-    #         gamesList.append(game)
-
-    #         if game.fighter1 != None:
-    #             q.append(game.fighter1)
-    #         if game.fighter2 != None:
-    #             q.append(game.fighter2)
-    #         if game.fighter1 == None and game.level != max_lvl:
-    #             q.append(Game())
-    #         if game.fighter2 != None and game.level != max_lvl:
-    #             q.append(Game())
-            
-    #         q.popleft()
-    #     gamesList.reverse()
-    #     serializer = ListGameSerializer(gamesList, many=True)
-    #     return Response(serializer.data, status=status.HTTP_200_OK)
+        return 2**(a + 1)
 
     @action(detail=True, methods=['post'], url_name='generate_tournament_bracket_for_all')
     def generate_tournament_bracket_for_all(self, request, pk=None):
@@ -182,47 +164,94 @@ class CompetitionViewsets(viewsets.ModelViewSet):
             for weight in weight_categories:
                 self.generate_tournament_bracket(age, weight)
         
-        return Response({"message": "Generated tournament for all the categories"}, status=status.HTTP_200_OK)
+        return Response({"message": "Succesfully generated tournament bracket for all categories"}, status=status.HTTP_200_OK)
     
-    # @action(detail=True, methods=['post'], url_name='generate_tournament_bracket')
     def generate_tournament_bracket(self, age_category, weight_category):
         competition = self.get_object()
-        participants = Participant.objects.filter(competition=competition, age_category=age_category, weight_category=weight_category)
+        participants = list(Participant.objects.filter(competition=competition, age_category=age_category, weight_category=weight_category))
+
+        next_power_of_two = self.nextPowerOf2(len(participants))
+
+        if next_power_of_two < 1:
+            return "There are no participants"
+
+        while len(participants) < next_power_of_two:
+            participants.append(None)
 
         # normalize tut, sorting anau-mynau osynda bolu kerek
-
-        self.generate_tournament_bracket_for_individual_category(participants=participants, age_category=age_category, weight_category=weight_category)
+        return self.generate_tournament_bracket_for_individual_category(participants=participants, age_category=age_category, weight_category=weight_category)
+        
         
     def generate_tournament_bracket_for_individual_category(self, participants, age_category, weight_category):
-        def divide(start, end):
-            if end < start:
-                return
-            if end - start == 1:
-                fight = Game(competition=self.get_object(), 
-                             blue_corner=participants[start], red_corner=participants[end], 
-                             empty=False, age_category=age_category, weight_category=weight_category)
-                fight.save()
-                return fight
-            if end == start:
-                fight = Game(competition=self.get_object(), 
-                             red_corner=participants[end], empty=True,
-                             age_category=age_category, weight_category=weight_category)
-                fight.save()
-                return fight
-                    
-            mid = (end - start) // 2
+    
+        level = math.log2(len(participants))
+        max_level = level
+        prev_level = []
+        current_level = []
 
-            fight = Game(competition=self.get_object(), 
-                         age_category=age_category, weight_category=weight_category)
-            fight.save()
-            first_fight = divide(start, start + mid)
-            first_fight.parent_id = fight.id
-            first_fight.save() 
-            second_fight = divide(start + mid + 1, end)
-            second_fight.parent_id = fight.id
-            second_fight.save() 
+        print(participants)
+        # next_players = []
 
-            return fight
+        # assert len(participants) > 0
+        if len(participants) == 0:
+            return Response({"message": "No games in {age_category} - {weight_category}"}, status=status.HTTP_200_OK)
+        
+        if len(participants) == 1:
+            g =  Game(competition=self.get_object(),
+                 blue_corner=participants[0], red_corner=None,
+                 age_category=age_category, weight_category=weight_category
+                 )
+            g.save()
+            return Response({"message": "Succesfully generated tournament bracket for single participant"}, status=status.HTTP_200_OK)
+        
+        index = 1
+        
+        for i in range(int(len(participants) / 2)):
+            player1_id = i
+            player2_id = len(participants) - 1 - i
 
-        divide(0, len(participants) - 1)
+            if participants[player2_id] is None:
+                g = Game(competition=self.get_object(),
+                         blue_corner=participants[player1_id], red_corner=None,
+                         age_category=age_category, weight_category=weight_category, level=level, index=index)
+                g.save()
+                index += 1
+                prev_level.append(g)
+            else:
+                g = Game(competition=self.get_object(),
+                         blue_corner=participants[player1_id], red_corner=participants[player2_id],
+                         age_category=age_category, weight_category=weight_category, level=level, index=index)
+                g.save()
+                index += 1
+                prev_level.append(g)
+        
+        level -= 1
+
+        while level >= 1:
+            for i in range(0, len(prev_level), 2):
+                if level + 1 == max_level:
+                    if prev_level[i].red_corner is None:
+                        prev_level[i].winner = prev_level[i].blue_corner
+                    if prev_level[i + 1].red_corner is None:
+                        prev_level[i + 1].winner = prev_level[i + 1].blue_corner
+                
+                g = Game(competition=self.get_object(),
+                         blue_corner=prev_level[i].winner, red_corner=prev_level[i+1].winner,
+                         age_category=age_category, weight_category=weight_category, level=level, index=index)
+                index += 1
+
+                g.save()
+                
+                prev_level[i].parent = g
+                prev_level[i].save()
+                prev_level[i+1].parent = g
+                prev_level[i+1].save()
+                current_level.append(g)
+            
+            prev_level = current_level
+            current_level = []
+            
+            level -= 1
+
+
         return Response({"message": "Succesfully generated tournament bracket"}, status=status.HTTP_200_OK)

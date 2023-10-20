@@ -37,10 +37,10 @@ class GameSerializer(serializers.ModelSerializer):
             "red_corner",
             "blue_corner",
             "parent",
-            "empty",
             "age_category",
             "weight_category",
-
+            "level",
+            "index"
         ]
 
 class ListGameSerializer(serializers.ModelSerializer):
@@ -51,8 +51,7 @@ class ListGameSerializer(serializers.ModelSerializer):
             "competition",
             "red_corner",
             "blue_corner",
-            "fighter1",
-            "fighter2",
             "level",
-            "empty"
+            "parent",
+            "level"
         ]
