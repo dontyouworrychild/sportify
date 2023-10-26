@@ -58,7 +58,7 @@ class StudentViewsets(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'], url_name='list_last_fights')
     def list_last_fights(self, request, pk=None):
         student = self.get_object()
-        participants = Participant.objects.filter(participant=student).order_by('competition__start_date')
+        participants = Participant.objects.filter(participant=student).order_by('-competition__start_date')
         games = []
         for participant in participants:
             current_games = Game.objects.filter(Q(red_corner=participant) | Q(blue_corner=participant)).order_by('-level')
