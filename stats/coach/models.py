@@ -2,7 +2,6 @@ from django.utils.translation import gettext_lazy as _
 from django.db import models
 from user.models import User
 from club.models import Club
-from common.enums import SPORT_TYPES
 
 def coach_directory_path(instance, filename):
     extension = filename.split(".")[-1]

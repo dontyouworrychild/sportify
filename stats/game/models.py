@@ -3,8 +3,6 @@ from competition.models import Competition, Participant
 from common.enums import AGE_CATEGORY_CHOICE, WEIGHT_CATEGORY_CHOICE
 import uuid
 
-
-
 class Game(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     competition = models.ForeignKey(Competition, related_name='games', on_delete=models.CASCADE)

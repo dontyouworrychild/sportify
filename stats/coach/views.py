@@ -1,12 +1,12 @@
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
+from student.models import Student
+from student.serializers import StudentSerializer
 from user.views import UserViewsets
 from .models import Coach
 from .serializers import CoachSerializer
-from student.models import Student
-from student.serializers import StudentSerializer
-from rest_framework.response import Response
-from rest_framework.decorators import action
-from rest_framework import filters, status
 
 
 class CoachViewsets(UserViewsets):

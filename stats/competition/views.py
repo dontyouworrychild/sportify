@@ -1,11 +1,9 @@
-from collections import deque
-from rest_framework import filters, status, viewsets, exceptions
+from rest_framework import status, viewsets, exceptions
 from django.db.models import Q
-from common.enums import SystemRoleEnum
 from .models import Competition, Participant
 from game.models import Game
 from .serializers import CompetitionSerializer, ParticipantSerializer
-from game.serializers import GameSerializer, ListGameSerializer
+from game.serializers import GameSerializer
 from rest_framework.permissions import AllowAny
 from .permissions import IsPresident, IsOrganizator, IsStudentCoach
 from rest_framework.response import Response

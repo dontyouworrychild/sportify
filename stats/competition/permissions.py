@@ -1,8 +1,8 @@
-from rest_framework import permissions
-from common.enums import SystemRoleEnum
 from django.shortcuts import get_object_or_404
+from rest_framework import permissions
 from student.models import Student
 from coach.models import Coach
+from common.enums import SystemRoleEnum
 
 class IsPresident(permissions.BasePermission):
     def has_permission(self, request, view):

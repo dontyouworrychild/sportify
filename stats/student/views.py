@@ -1,20 +1,16 @@
+from django.db.models import Q
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-
-from competition.models import Competition, Participant
+from rest_framework.decorators import action
+from coach.models import Coach
+from competition.models import Participant
 from competition.serializers import ParticipantSerializer
 from game.serializers import GameSerializer
 from game.models import Game
-from django.db.models import Q
-
 from .models import Student
-from coach.models import Coach
 from .serializers import StudentSerializer
 from .permissions import IsStudentCoach, IsCoach
-from rest_framework.decorators import action
-
-from django.db.models import F
 
 
 class StudentViewsets(viewsets.ModelViewSet):
@@ -58,7 +54,7 @@ class StudentViewsets(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'], url_name='list_last_fights')
     def list_last_fights(self, request, pk=None):
         student = self.get_object()
-        participants = Participant.objects.filter(participant=student).order_by('-competition__start_date')
+        participants = Participant.objects.filter(participant=student).order_by('competition__start_date')
         games = []
         for participant in participants:
             current_games = Game.objects.filter(Q(red_corner=participant) | Q(blue_corner=participant)).order_by('-level')
@@ -71,9 +67,8 @@ class StudentViewsets(viewsets.ModelViewSet):
             serializer = GameSerializer(games_for_participant, many=True)
             games.append(serializer.data)
 
-        # serializer = GameSerializer(games, many=True)
         return Response({"message": games}, status=status.HTTP_200_OK)
-    
+
     @action(detail=True, methods=['get'], url_name='results_in_competitions')
     def results_in_competitions(self, request, pk=None):
         student = self.get_object()

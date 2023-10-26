@@ -1,10 +1,9 @@
 import uuid
 from django.db import models
-from organizator.models import Organizator
 from django.utils.translation import gettext_lazy as _
-from common.enums import SPORT_TYPES, AGE_CATEGORY_CHOICE, WEIGHT_CATEGORY_CHOICE
-from user.models import User
+from organizator.models import Organizator
 from student.models import Student
+from common.enums import AGE_CATEGORY_CHOICE, WEIGHT_CATEGORY_CHOICE
 
 class Federation(models.Model):
     name = models.CharField(max_length=100)
@@ -47,4 +46,5 @@ class Participant(models.Model):
     place = models.IntegerField(null=True, blank=True)
 
     def __str__(self) -> str:
-        return f"{self.participant.first_name} {self.participant.last_name} - ({self.participant.club.name}, {self.participant.club.location} - ({self.place}))"
+        return f"{self.participant.first_name} {self.participant.last_name} - ({self.participant.club.name}, {self.participant.club.location} - ({self.place})) : {self.id}"
+
