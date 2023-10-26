@@ -2,8 +2,10 @@ from collections import deque
 from rest_framework import filters, status, viewsets, exceptions
 from django.db.models import Q
 from common.enums import SystemRoleEnum
-from .models import Competition, Participant, Game
-from .serializers import CompetitionSerializer, ParticipantSerializer, GameSerializer, ListGameSerializer
+from .models import Competition, Participant
+from game.models import Game
+from .serializers import CompetitionSerializer, ParticipantSerializer
+from game.serializers import GameSerializer, ListGameSerializer
 from rest_framework.permissions import AllowAny
 from .permissions import IsPresident, IsOrganizator, IsStudentCoach
 from rest_framework.response import Response
@@ -35,7 +37,7 @@ class CompetitionViewsets(viewsets.ModelViewSet):
             permission_classes = [IsOrganizator, IsPresident]
         elif self.action in ['register_student']:
             permission_classes = [IsStudentCoach]
-        elif self.action in ['retrieve', 'list', 'list_participants', 'generate_tournament_bracket_for_all', 'list_games']:
+        elif self.action in ['retrieve', 'list', 'list_participants', 'generate_tournament_bracket_for_all', 'list_games', 'get_winners']:
             # generate_tournament_bracket - udalit' etu kerek
             permission_classes = [AllowAny]
         return [permission() for permission in permission_classes]
@@ -144,6 +146,22 @@ class CompetitionViewsets(viewsets.ModelViewSet):
         
         serializer = GameSerializer(games, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+        
+    @action(detail=True, methods=['get'], url_name='get_winners')
+    def get_winners(self, request, pk=None):
+        competition = self.get_object()
+        age_category = request.query_params.get('age')
+
+        games = Game.objects.filter(competition=competition, level=1)
+        if age_category:
+            games = Game.objects.filter(competition=competition, age_category=age_category, level=1)
+
+        winners = [game.winner for game in games if game.winner is not None]
+        
+        serializer = ParticipantSerializer(winners, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
 
     def nextPowerOf2(self, length):
         # Calculate log2 of N

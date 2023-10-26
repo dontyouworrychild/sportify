@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Competition, Participant, Game
+from .models import Competition, Participant
 
 
 class CompetitionSerializer(serializers.ModelSerializer):
@@ -25,33 +25,4 @@ class ParticipantSerializer(serializers.ModelSerializer):
             "participant",
             "age_category",
             "weight_category",
-        ]
-
-
-class GameSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Game
-        fields = [
-            "id",
-            "competition",
-            "red_corner",
-            "blue_corner",
-            "parent",
-            "age_category",
-            "weight_category",
-            "level",
-            "index"
-        ]
-
-class ListGameSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Game
-        fields = [
-            "id",
-            "competition",
-            "red_corner",
-            "blue_corner",
-            "level",
-            "parent",
-            "level"
         ]

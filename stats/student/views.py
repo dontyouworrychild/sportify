@@ -2,10 +2,14 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 
+from competition.models import Competition, Participant
+from game.models import Game
+
 from .models import Student
 from coach.models import Coach
 from .serializers import StudentSerializer
 from .permissions import IsStudentCoach, IsCoach
+from rest_framework.decorators import action
 
 
 class StudentViewsets(viewsets.ModelViewSet):
@@ -14,7 +18,7 @@ class StudentViewsets(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
 
     def get_permissions(self):
-        if self.action in ['retrieve', 'list']:
+        if self.action in ['retrieve', 'list', 'list_last_fights']:
             permission_classes = [AllowAny]
         if self.action in ['partial_update', 'update', 'destroy']:
             permission_classes = [IsStudentCoach]
@@ -45,3 +49,16 @@ class StudentViewsets(viewsets.ModelViewSet):
                 return Response({"error": "Invalid coach ID."}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({"error": "You are not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+    @action(detail=True, methods=['get'], url_name='list_last_fights')
+    def list_last_fights(self, request, pk=None):
+        student = self.get_object()
+        competitions = Participant.objects.filter(participant=student)
+        '''
+        
+        Participant.objects.filter(participant=student) мында маган participant келедыго
+        солардын ишинен маган competitionдарды алып алу керек, и потом оларды сортировка по start_time кою керекко
+
+        
+        '''
+        return Response({"message": "heey"}, status=status.HTTP_200_OK)
