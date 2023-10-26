@@ -62,11 +62,17 @@ class StudentViewsets(viewsets.ModelViewSet):
         games = []
         for participant in participants:
             current_games = Game.objects.filter(Q(red_corner=participant) | Q(blue_corner=participant)).order_by('-level')
-            for current_game in current_games:
-                games.append(current_game)
 
-        serializer = GameSerializer(games, many=True)
-        return Response({"message": serializer.data}, status=status.HTTP_200_OK)
+            games_for_participant = []
+
+            for current_game in current_games:
+                games_for_participant.append(current_game)
+            
+            serializer = GameSerializer(games_for_participant, many=True)
+            games.append(serializer.data)
+
+        # serializer = GameSerializer(games, many=True)
+        return Response({"message": games}, status=status.HTTP_200_OK)
     
     @action(detail=True, methods=['get'], url_name='results_in_competitions')
     def results_in_competitions(self, request, pk=None):

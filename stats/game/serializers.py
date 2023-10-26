@@ -1,6 +1,10 @@
 from rest_framework import serializers
 from .models import Game
 
+class CustomGameListSerializer(serializers.ListSerializer):
+    def to_representation(self, data):
+        return data
+
 class GameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
@@ -16,6 +20,8 @@ class GameSerializer(serializers.ModelSerializer):
             "level",
             "index"
         ]
+
+        list_serializer_class = CustomGameListSerializer
 
 class UpdateGameSerializer(serializers.ModelSerializer):
     class Meta:
