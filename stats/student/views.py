@@ -4,7 +4,9 @@ from rest_framework.permissions import AllowAny
 
 from competition.models import Competition, Participant
 from competition.serializers import ParticipantSerializer
+from game.serializers import GameSerializer
 from game.models import Game
+from django.db.models import Q
 
 from .models import Student
 from coach.models import Coach
@@ -56,21 +58,19 @@ class StudentViewsets(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'], url_name='list_last_fights')
     def list_last_fights(self, request, pk=None):
         student = self.get_object()
-        competitions = Participant.objects.filter(participant=student)
-        '''
-        
-        Participant.objects.filter(participant=student) мында маган participant келедыго
-        солардын ишинен маган competitionдарды алып алу керек, и потом оларды сортировка по start_time кою керекко
+        participants = Participant.objects.filter(participant=student).order_by('competition__start_date')
+        games = []
+        for participant in participants:
+            current_games = Game.objects.filter(Q(red_corner=participant) | Q(blue_corner=participant)).order_by('-level')
+            for current_game in current_games:
+                games.append(current_game)
 
-        
-        '''
-        return Response({"message": "heey"}, status=status.HTTP_200_OK)
+        serializer = GameSerializer(games, many=True)
+        return Response({"message": serializer.data}, status=status.HTTP_200_OK)
     
     @action(detail=True, methods=['get'], url_name='results_in_competitions')
     def results_in_competitions(self, request, pk=None):
         student = self.get_object()
         participants = Participant.objects.filter(participant=student).order_by('competition__start_date')
-
         serializer = ParticipantSerializer(participants, many=True)
-
-        return Response({"message": serializer.data})
+        return Response({"message": serializer.data}, status=status.HTTP_200_OK)
