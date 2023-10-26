@@ -5,10 +5,7 @@ from club.models import Club
 
 def coach_directory_path(instance, filename):
     extension = filename.split(".")[-1]
-    # image will be uploaded to MEDIA_ROOT/coaches/{coach_id}.extension}
-
     return f"coaches/{instance.id}.{extension}"
-
 
 class Coach(User):
     image = models.ImageField(upload_to=coach_directory_path, blank=True)

@@ -4,8 +4,6 @@ from django.db import models
 
 def logo_directory_path(instance, filename):
     extension = filename.split('.')[-1]
-    # image will be uploaded to MEDIA_ROOT/clubs/{club_id}.extension}
-
     return f"clubs/{instance.id}.{extension}"
 
 class Club(models.Model):

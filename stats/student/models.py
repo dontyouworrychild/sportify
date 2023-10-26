@@ -1,16 +1,11 @@
+import uuid
 from django.utils.translation import gettext_lazy as _
 from django.db import models
-import uuid
 from coach.models import Coach
 from club.models import Club
-from django.utils.translation import gettext_lazy as _
-from common.enums import SPORT_TYPES
 
 def student_directory_path(instance, filename):
-    # image will be uploaded to MEDIA_ROOT/students/{student_id}.extension
-    # unique filename will be generated
     extension = filename.split('.')[-1]
-
     return f"students/{instance.id}.{extension}"
 
 class Student(models.Model):
