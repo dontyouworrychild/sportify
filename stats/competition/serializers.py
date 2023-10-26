@@ -25,4 +25,5 @@ class ParticipantSerializer(serializers.ModelSerializer):
             "participant",
             "age_category",
             "weight_category",
+            "place"
         ]

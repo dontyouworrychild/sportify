@@ -44,6 +44,7 @@ class Participant(models.Model):
     participant = models.ForeignKey(Student, related_name='competitions', on_delete=models.CASCADE)
     age_category = models.CharField(max_length=5, choices=AGE_CATEGORY_CHOICE)
     weight_category = models.CharField(max_length=5, choices=WEIGHT_CATEGORY_CHOICE)
+    place = models.IntegerField(null=True, blank=True)
 
     def __str__(self) -> str:
-        return f"{self.participant.first_name} {self.participant.last_name} - ({self.participant.club.name}, {self.participant.club.location})"
+        return f"{self.participant.first_name} {self.participant.last_name} - ({self.participant.club.name}, {self.participant.club.location} - ({self.place}))"

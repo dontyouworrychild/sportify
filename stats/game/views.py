@@ -41,6 +41,14 @@ class GameViewsets(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
+        if game.red_corner is not None and game.red_corner != game.winner:
+            game.red_corner.place = 2 ** (game.level - 1) + 1
+            game.red_corner.save()
+        if game.blue_corner is not None and game.blue_corner != game.winner:
+            game.blue_corner.place = 2 ** (game.level - 1) + 1
+            game.blue_corner.save()
+        
+
         if game.parent is not None:
             if game.parent.red_corner in [game.red_corner, game.blue_corner]:
                 game.parent.red_corner = game.winner
