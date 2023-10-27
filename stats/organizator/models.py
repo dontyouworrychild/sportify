@@ -7,8 +7,6 @@ def organizator_directory_path(instance, filename):
     return f"organizators/{instance.id}.{extension}"
 
 class Organizator(User):
-    image = models.ImageField(upload_to=organizator_directory_path, blank=True)
-
     class Meta:
         verbose_name = _("organizator")
         verbose_name_plural = _("organizators")
@@ -18,4 +16,7 @@ class Organizator(User):
     
     def save(self, *args, **kwargs):
         self.role = "organizator"
-        super().save(*args, **kwargs)
+        super(Organizator, self).save(*args, **kwargs)
+        # update_fields = ['role']
+        # super(Organizator, self).save(update_fields=update_fields)
+        # super().save(*args, **kwargs)

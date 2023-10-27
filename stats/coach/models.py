@@ -8,7 +8,6 @@ def coach_directory_path(instance, filename):
     return f"coaches/{instance.id}.{extension}"
 
 class Coach(User):
-    image = models.ImageField(upload_to=coach_directory_path, blank=True)
     club = models.ForeignKey(Club, verbose_name=_("club"), related_name="coaches", null=True, on_delete=models.SET_NULL)
 
     # Пока что пусь location осылай бола берсын, но в целом, 

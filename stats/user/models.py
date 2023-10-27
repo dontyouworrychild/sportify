@@ -18,12 +18,9 @@ from .enums import TOKEN_TYPE_CHOICE, ROLE_CHOICE
 def default_role():
     return ["admin"]
 
-def user_directory_path(instance, filename):
-    # image will be uploaded to MEDIA_ROOT/users/{user_id}/{filename}
-    # unique filename will be generated\
+def image_directory_path(instance, filename):
     extension = filename.split('.')[-1]
-
-    return f"users/{instance.id}.{extension}"
+    return f"{instance.role}/{instance.id}.{extension}"
 
 class User(AbstractBaseUser, PermissionsMixin):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -40,7 +37,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     phone_number = models.CharField(
         _("phone_number"), max_length=30, unique=True)
-    # image = models.ImageField(upload_to=user_directory_path, blank=True, null=True)
+    image = models.ImageField(upload_to=image_directory_path, blank=True, null=True)
     first_name = models.CharField(_("first_name"), max_length=150, blank=True)
     last_name = models.CharField(_("last_name"), max_length=150, blank=True)
     # location = models.CharField(_("location"))
@@ -54,7 +51,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ["phone_number"]
     objects = CustomUserManager()
-    role = models.CharField(max_length=20, choices=ROLE_CHOICE, default=default_role)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICE, null=True, blank=True)
     
     class Meta:
         verbose_name = _("user")

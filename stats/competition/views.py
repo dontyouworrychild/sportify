@@ -5,10 +5,11 @@ from game.models import Game
 from .serializers import CompetitionSerializer, ParticipantSerializer
 from game.serializers import GameSerializer
 from rest_framework.permissions import AllowAny
-from .permissions import IsPresident, IsOrganizator, IsStudentCoach
+from .permissions import IsPresident, IsStudentCoach
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from student.models import Student
+from organizator.permissions import IsOrganizator
 
 import math
 

@@ -9,5 +9,14 @@ class OrganizatorSerializer(serializers.ModelSerializer):
             "id",
             "first_name",
             "last_name",
+            "username",
+            "image",
+            "role",
+        ]
+
+class UpdateOrganizatorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organizator
+        fields = [
             "image",
         ]

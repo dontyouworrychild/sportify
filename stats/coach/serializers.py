@@ -14,3 +14,10 @@ class CoachSerializer(serializers.ModelSerializer):
             "location",
             "role"
         ]
+
+class UpdateCoachSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Coach
+        fields = [
+            "image"
+        ]

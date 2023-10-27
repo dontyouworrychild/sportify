@@ -31,7 +31,7 @@ class UserAdmin(BaseUserAdmin):
             },
         ),
     )
-    list_display = ("username", "phone_number", "first_name", "last_name", "is_staff")
+    list_display = ("username", "phone_number", "first_name", "last_name", "role",)
     search_fields = ("username", "first_name", "last_name", "phone_number")
 
 admin.site.register(User, UserAdmin)

@@ -1,37 +1,19 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.hashers import make_password
 from django.utils.translation import gettext_lazy as _
-from .models import Organizator
+from .models import Organizator 
 
-class OrganizatorAdmin(BaseUserAdmin):
+class OrganizatorAdmin(admin.ModelAdmin):
+    exclude = ('role', 'is_staff', 'is_active', 'is_admin', 'last_login', 'groups', 'is_superuser', 'user_permissions')
+
     fieldsets = (
-        (None, {"fields": ("username", "password",)}),
-        (_("Personal info"), {"fields": ("image", )}),
-        (_("Role"), {"fields": ("role", )}),
-        (
-            _("Permissions"),
-            {
-                "fields": (
-                    "is_active",
-                    "is_staff",
-                    "is_superuser",
-                    "groups",
-                    "user_permissions",
-                ),
-            },
-        ),
-        (_("Important dates"), {"fields": ("last_login", )}),
+        (None, {"fields": ("username", "password", "phone_number", "first_name", "last_name", "image")}),
     )
-    add_fieldsets = (
-        (
-            None,
-            {
-                "classes": ("wide",),
-                "fields": ("username", "phone_number", "password1", "password2", "first_name", "last_name"),
-            },
-        ),
-    )
-    list_display = ("username", "phone_number", "first_name", "last_name", "is_staff")
-    search_fields = ("username", "first_name", "last_name", "phone_number")
+    list_display = ("username", "phone_number", "first_name", "last_name", "image")
+
+    def save_model(self, request, obj, form, change):
+        obj.role = "organizator"
+        obj.password = make_password(obj.password)
+        super().save_model(request, obj, form, change)
 
 admin.site.register(Organizator, OrganizatorAdmin)
