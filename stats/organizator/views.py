@@ -27,4 +27,4 @@ class OrganizatorViewsets(UserViewsets):
         serializer = UpdateOrganizatorSerializer(organizator, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response({"message": serializer.data}, status=status.HTTP_200_OK)
+        return Response({"message": "Image updated successfully"}, status=status.HTTP_200_OK)
