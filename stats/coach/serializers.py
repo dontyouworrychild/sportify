@@ -7,12 +7,14 @@ class CoachSerializer(serializers.ModelSerializer):
         model = Coach
         fields = [
             "id",
+            "username",
             "first_name",
             "last_name",
             "image",
             "club",
             "location",
-            "role"
+            "role",
+            "phone_number"
         ]
 
 class UpdateCoachSerializer(serializers.ModelSerializer):

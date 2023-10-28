@@ -19,8 +19,12 @@ def default_role():
     return ["admin"]
 
 def image_directory_path(instance, filename):
+    role = "other"
+    if hasattr(instance, 'role'):
+        role = instance.role
+
     extension = filename.split('.')[-1]
-    return f"{instance.role}/{instance.id}.{extension}"
+    return f"{role}/{instance.id}.{extension}"
 
 class User(AbstractBaseUser, PermissionsMixin):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

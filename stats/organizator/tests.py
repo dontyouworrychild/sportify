@@ -7,8 +7,6 @@ import os
 class OrganizatorViewsetsTest(APITestCase):
     @classmethod
     def setUpTestData(cls):
-        # print("Current working directory:", os.getcwd())
-
         image_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../common/test_images/image.png'))
         image = SimpleUploadedFile(name='image.png', content=open(image_path, 'rb').read(), content_type='image/png')
         cls.organizator = Organizator.objects.create_user(
