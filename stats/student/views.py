@@ -19,7 +19,7 @@ class StudentViewsets(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
 
     def get_permissions(self):
-        if self.action in ['retrieve', 'list', 'list_last_fights', 'results_in_competitions']:
+        if self.action in ['retrieve', 'list', 'last_fights', 'results_in_competitions']:
             permission_classes = [AllowAny]
         if self.action in ['partial_update', 'update', 'destroy']:
             permission_classes = [IsStudentCoach]
@@ -51,8 +51,8 @@ class StudentViewsets(viewsets.ModelViewSet):
         else:
             return Response({"error": "You are not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         
-    @action(detail=True, methods=['get'], url_name='list_last_fights')
-    def list_last_fights(self, request, pk=None):
+    @action(detail=True, methods=['get'], url_name='last-fights')
+    def last_fights(self, request, pk=None):
         student = self.get_object()
         participants = Participant.objects.filter(participant=student).order_by('competition__start_date')
         games = []
@@ -69,7 +69,7 @@ class StudentViewsets(viewsets.ModelViewSet):
 
         return Response({"message": games}, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['get'], url_name='results_in_competitions')
+    @action(detail=True, methods=['get'], url_name='results-in-competitions')
     def results_in_competitions(self, request, pk=None):
         student = self.get_object()
         participants = Participant.objects.filter(participant=student).order_by('competition__start_date')

@@ -36,7 +36,7 @@ class CompetitionViewsets(viewsets.ModelViewSet):
             permission_classes = [IsOrganizator, IsPresident]
         elif self.action in ['register_student']:
             permission_classes = [IsStudentCoach]
-        elif self.action in ['retrieve', 'list', 'list_participants', 'generate_tournament_bracket_for_all', 'list_games', 'get_winners']:
+        elif self.action in ['retrieve', 'list', 'participants', 'generate_tournament_bracket', 'games', 'winners']:
             # generate_tournament_bracket - udalit' etu kerek
             permission_classes = [AllowAny]
         return [permission() for permission in permission_classes]
@@ -120,15 +120,15 @@ class CompetitionViewsets(viewsets.ModelViewSet):
         return Response({"message": "Student unregistered successfully."},
                         status=status.HTTP_200_OK)
     
-    @action(detail=True, methods=['get'], url_name='list_participants')
-    def list_participants(self, request, pk=None):
+    @action(detail=True, methods=['get'], url_name='participants')
+    def participants(self, request, pk=None):
         competition = self.get_object()
         participants = Participant.objects.filter(competition=competition)
         serializer = ParticipantSerializer(participants, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['get'], url_name='list_games')
-    def list_games(self, request, pk=None):
+    @action(detail=True, methods=['get'], url_name='games')
+    def games(self, request, pk=None):
         competition = self.get_object()
         age_category = request.query_params.get('age')
         weight_category = request.query_params.get('weight')
@@ -146,8 +146,8 @@ class CompetitionViewsets(viewsets.ModelViewSet):
         serializer = GameSerializer(games, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
         
-    @action(detail=True, methods=['get'], url_name='get_winners')
-    def get_winners(self, request, pk=None):
+    @action(detail=True, methods=['get'], url_name='winners')
+    def winners(self, request, pk=None):
         competition = self.get_object()
         age_category = request.query_params.get('age')
 
@@ -174,16 +174,16 @@ class CompetitionViewsets(viewsets.ModelViewSet):
     
         return 2**(a + 1)
 
-    @action(detail=True, methods=['post'], url_name='generate_tournament_bracket_for_all')
-    def generate_tournament_bracket_for_all(self, request, pk=None):
+    @action(detail=True, methods=['post'], url_name='generate_tournament_bracket')
+    def generate_tournament_bracket(self, request, pk=None):
 
         for age, weight_categories in CATEGORIES.items():
             for weight in weight_categories:
-                self.generate_tournament_bracket(age, weight)
+                self.generate_tournament_bracket_logic(age, weight)
         
         return Response({"message": "Succesfully generated tournament bracket for all categories"}, status=status.HTTP_200_OK)
     
-    def generate_tournament_bracket(self, age_category, weight_category):
+    def generate_tournament_bracket_logic(self, age_category, weight_category):
         competition = self.get_object()
         participants = list(Participant.objects.filter(competition=competition, age_category=age_category, weight_category=weight_category))
 

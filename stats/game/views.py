@@ -26,7 +26,7 @@ class GameViewsets(viewsets.ModelViewSet):
             permission_classes = [AllowAny]
         return [permission() for permission in permission_classes]
 
-    @action(detail=True, methods=['post'], url_name='select_winner')
+    @action(detail=True, methods=['post'], url_name='select-winner')
     def select_winner(self, request, pk=None):
         game = self.get_object()
 
