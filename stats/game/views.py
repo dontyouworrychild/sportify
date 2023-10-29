@@ -2,63 +2,122 @@ from rest_framework import status, viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiExample
 from competition.models import Participant
 from .models import Game
-from .serializers import GameSerializer, UpdateGameSerializer
+from .serializers import GameSerializer, SelectWinnerSerializer
 from .permissions import IsCompetitionOrganizator
 
 @extend_schema(tags=['Game'])
 class GameViewsets(viewsets.ModelViewSet):
     queryset = Game.objects.all()
     serializer_class = GameSerializer
-    # permission_classes = [AllowAny]
-    http_method_names = ['get', 'post', 'patch']
+    http_method_names = ['get', 'post']
 
     def get_permissions(self):
         permission_classes = [AllowAny]
-        if self.action in ['partial_update', 'select_winner']:
+        if self.action in ['select_winner']:
             permission_classes = [IsCompetitionOrganizator]
         return [permission() for permission in permission_classes]
-
+    
+    @extend_schema(
+        summary="Disable Creation of New Games",
+        description="Prevents the creation of new Game instances via POST request.",
+        request=None,
+        responses={
+            405: OpenApiExample(
+                "Method Not Allowed",
+                summary="Creation of new games via POST is not allowed",
+                description="This response is returned when a POST request is made attempting to create a new Game instance.",
+                value={"error": "Creation of new games via POST is not allowed."},
+                response_only=True,
+                status_codes=["405"],
+            )
+        },
+        examples=[
+            OpenApiExample(
+                name='DisablePostGame',
+                value={
+                    "error": "Creation of new games via POST is not allowed."
+                },
+                response_only=True,
+                media_type='application/json',
+                status_codes=['405']
+            ),
+        ]
+    )
+    def create(self):
+        """
+        Override the create method to disable POST requests for creating a new Game.
+        """
+        return Response({"error": "Creation of new games via POST is not allowed."}, 
+                        status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    
+    @extend_schema(
+        summary="Select a Winner for a Game",
+        description="Allows the selection of a winner for a specific game. "
+                    "The winner is identified by their participant ID.",
+        request=SelectWinnerSerializer,
+        responses={
+            200: inline_serializer(
+            name='SelectWinnerResponse',
+            fields={
+                'message': "Winner selected successfully",
+                'data': GameSerializer()
+            }
+        )
+        },
+    )
     @action(detail=True, methods=['post'], url_name='select-winner')
     def select_winner(self, request, pk=None):
         game = self.get_object()
 
-        winner = Participant.objects.get(id=request.data['winner'])
-        if winner is None:
+        try:
+            winner = self.get_participant(request.data.get('winner'))
+        except Participant.DoesNotExist:
             return Response({"error": "Sorry there is no participant with that id"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if winner not in [game.blue_corner, game.red_corner]:
-            return Response({"error": "sorry brat"}, status=status.HTTP_400_BAD_REQUEST)
-            
-        serializer = UpdateGameSerializer(game, data=request.data, partial=True)
+
+        if not self.is_valid_winner(game, winner):
+            return Response({"error": "Sorry, invalid participant selection"}, status=status.HTTP_400_BAD_REQUEST)
+
+        self.update_winner(game, winner)
+        game_serializer = GameSerializer(game)
+        return Response({"message": "Winner selected successfully", "data": game_serializer.data}, status=status.HTTP_200_OK)
+
+    def get_participant(self, participant_id):
+        if not participant_id:
+            raise Participant.DoesNotExist
+        return Participant.objects.get(id=participant_id)
+
+    def is_valid_winner(self, game, winner):
+        return winner in [game.blue_corner, game.red_corner]
+
+    def update_winner(self, game, winner):
+        self.update_game(game, winner)
+        self.assign_losers_ranking(game)
+        self.update_parent_game(game, winner)
+
+    def update_game(self, game, winner):
+        serializer = SelectWinnerSerializer(game, data={'winner': winner.id}, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        if game.red_corner is not None and game.red_corner != game.winner:
-            game.red_corner.place = 2 ** (game.level - 1) + 1
-            game.red_corner.save()
-        if game.blue_corner is not None and game.blue_corner != game.winner:
-            game.blue_corner.place = 2 ** (game.level - 1) + 1
-            game.blue_corner.save()
-        
+    def assign_losers_ranking(self, game):
+        for corner in [game.red_corner, game.blue_corner]:
+            if corner and corner != game.winner:
+                corner.place = 2 ** (game.level - 1) + 1
+                corner.save()
 
-        if game.parent is not None:
-            if game.parent.red_corner in [game.red_corner, game.blue_corner]:
-                game.parent.red_corner = game.winner
-            elif game.parent.blue_corner in [game.red_corner, game.blue_corner]:
-                game.parent.blue_corner = game.winner
-            elif game.parent.red_corner is None:
-                game.parent.red_corner = game.winner
-            elif game.parent.blue_corner is None:
-                game.parent.blue_corner = game.winner
+    def update_parent_game(self, game, winner):
+        if game.parent:
+            if not game.parent.red_corner or game.parent.red_corner in [game.red_corner, game.blue_corner]:
+                game.parent.red_corner = winner
+            elif not game.parent.blue_corner or game.parent.blue_corner in [game.red_corner, game.blue_corner]:
+                game.parent.blue_corner = winner
             game.parent.save()
         else:
             game.place = 1
             game.save()
-
-        return Response({"message": serializer.data}, status=status.HTTP_200_OK)
 
 
 

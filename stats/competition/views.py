@@ -283,7 +283,7 @@ class CompetitionViewsets(viewsets.ModelViewSet):
         summary="Generate Tournament Brackets",
         description="Generates tournament brackets for each age and weight category.",
         responses={201: inline_serializer(
-            name='RegisterStudentResponse',
+            name='GenerateTournamentBrackets',
             fields={
                 'message': serializers.CharField(),
             }
@@ -295,7 +295,7 @@ class CompetitionViewsets(viewsets.ModelViewSet):
     def generate_tournament_bracket(self, request, pk=None):
         for age, weight_categories in CATEGORIES.items():
             for weight in weight_categories:
-                generate_tournament_bracket_logic(age, weight)
+                generate_tournament_bracket_logic(age, weight, self.get_object())
         
         return Response({"message": "Succesfully generated tournament bracket for all categories"}, status=status.HTTP_200_OK)
     

@@ -17,6 +17,7 @@ from .permissions import IsOwner, IsAdmin
 
 from drf_spectacular.utils import extend_schema
 
+@extend_schema(tags=['Authentication'])
 class CustomObtainTokenPairView(TokenObtainPairView):
     """Authenticate with username and password"""
     serializer_class = CustomObtainTokenPairSerializer
@@ -82,7 +83,7 @@ class AuthViewsets(viewsets.GenericViewSet):
 #         serializer.save()
 #         return Response({"message": "Your password has been updated."}, status=status.HTTP_200_OK)
 
-
+@extend_schema(tags=['Authentication'])
 class CreateTokenView(ObtainAuthToken):
     """Create a new auth token for user"""
 

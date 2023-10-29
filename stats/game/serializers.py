@@ -17,7 +17,7 @@ class GameSerializer(serializers.ModelSerializer):
             # "index"
         ]
 
-class UpdateGameSerializer(serializers.ModelSerializer):
+class SelectWinnerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
         fields = [

@@ -14,3 +14,13 @@ class StudentSerializer(serializers.ModelSerializer):
             "location",
             "coach"
         ]
+
+class UpdateStudentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Student
+        fields = [
+            "first_name",
+            "last_name",
+            "image",
+            "club"
+        ]

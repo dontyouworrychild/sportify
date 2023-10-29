@@ -16,6 +16,9 @@ def generate_tournament_bracket_logic(age_category, weight_category, competition
     if next_power_of_two < 1:
         return "There are no participants"
     
+    while len(participants) < next_power_of_two:
+        participants.append(None)
+    
     # normalize tut, sorting anau-mynau osynda bolu kerek
     return generate_bracket_for_category(participants, age_category, weight_category, competition)
         

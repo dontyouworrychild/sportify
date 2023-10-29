@@ -1,9 +1,6 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import permissions
 from common.enums import SystemRoleEnum
-from django.shortcuts import get_object_or_404
-from student.models import Student
-from organizator.models import Organizator
-from competition.models import Competition
 from .models import Game
 
 
@@ -26,8 +23,5 @@ class IsCompetitionOrganizator(permissions.BasePermission):
         '''
         if request.user.id == game.competition.organizators.id:
             return True
-        
-        print(request.user.id)
-        print(game.competition.organizators.id)
 
         return False
