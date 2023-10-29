@@ -5,3 +5,5 @@ djangorestframework-simplejwt==5.2.2
 pyotp==2.8.0
 celery[redis]==5.2.7
 flower==2.0.0
+drf-spectacular==0.26.5
+django-rest-swagger==2.2.0

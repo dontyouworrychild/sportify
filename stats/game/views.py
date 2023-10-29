@@ -1,29 +1,24 @@
-from collections import deque
-from rest_framework import filters, status, viewsets, exceptions
-from django.db.models import Q
-from common.enums import SystemRoleEnum
-from competition.models import Competition, Participant
-from .models import Game
-from .serializers import GameSerializer, ListGameSerializer
+from rest_framework import status, viewsets
 from rest_framework.permissions import AllowAny
-# from .permissions import IsPresident, IsOrganizator, IsStudentCoach
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from student.models import Student
-from .serializers import UpdateGameSerializer
+from drf_spectacular.utils import extend_schema
+from competition.models import Participant
+from .models import Game
+from .serializers import GameSerializer, UpdateGameSerializer
 from .permissions import IsCompetitionOrganizator
 
+@extend_schema(tags=['Game'])
 class GameViewsets(viewsets.ModelViewSet):
     queryset = Game.objects.all()
     serializer_class = GameSerializer
-    permission_classes = [AllowAny]
+    # permission_classes = [AllowAny]
     http_method_names = ['get', 'post', 'patch']
 
     def get_permissions(self):
+        permission_classes = [AllowAny]
         if self.action in ['partial_update', 'select_winner']:
             permission_classes = [IsCompetitionOrganizator]
-        elif self.action in ['retrieve', 'list']:
-            permission_classes = [AllowAny]
         return [permission() for permission in permission_classes]
 
     @action(detail=True, methods=['post'], url_name='select-winner')
@@ -58,8 +53,10 @@ class GameViewsets(viewsets.ModelViewSet):
                 game.parent.red_corner = game.winner
             elif game.parent.blue_corner is None:
                 game.parent.blue_corner = game.winner
-
             game.parent.save()
+        else:
+            game.place = 1
+            game.save()
 
         return Response({"message": serializer.data}, status=status.HTTP_200_OK)
 

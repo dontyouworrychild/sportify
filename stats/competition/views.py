@@ -1,17 +1,17 @@
-from rest_framework import status, viewsets, exceptions
 from django.db.models import Q
-from .models import Competition, Participant
-from game.models import Game
-from .serializers import CompetitionSerializer, ParticipantSerializer
-from game.serializers import GameSerializer
-from rest_framework.permissions import AllowAny
-from .permissions import IsPresident, IsStudentCoach
+from rest_framework import status, viewsets, exceptions, serializers
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from student.models import Student
+from rest_framework.permissions import AllowAny
+from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiExample, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
+from game.models import Game
+from game.serializers import GameSerializer
 from organizator.permissions import IsOrganizator
-
-import math
+from .models import Competition, Participant
+from .serializers import CompetitionSerializer, ParticipantSerializer, UpdateCompetitionSerializer, RegisterStudentSerializer
+from .permissions import IsPresident, IsStudentCoach
+from .utils import generate_tournament_bracket_logic
 
 CATEGORIES = {
     '6-7': ['24kg', '28kg', '32kg', '36kg', '40kg', '44kg', '48kg'],
@@ -23,118 +23,206 @@ CATEGORIES = {
 }  
 
 
+@extend_schema(tags=['Competition'])
 class CompetitionViewsets(viewsets.ModelViewSet):
     queryset = Competition.objects.all()
     serializer_class = CompetitionSerializer
-    permission_classes = [AllowAny]
-    http_method_names = ['get', 'post', 'patch', 'delete']
+    # http_method_names = ['get', 'post', 'patch', 'delete']
+    http_method_names = ['get', 'patch', 'post']
 
     def get_permissions(self):
-        if self.action in ['create', 'destroy']:
-            permission_classes = [IsPresident]
-        elif self.action in ['partial_update']:
+        permission_classes = [AllowAny]
+        # if self.action in ['create', 'destroy']:
+            # permission_classes = [IsPresident]
+        if self.action in ['partial_update']:
             permission_classes = [IsOrganizator, IsPresident]
-        elif self.action in ['register_student']:
+        elif self.action in ['register_student', 'unregister_student']:
             permission_classes = [IsStudentCoach]
-        elif self.action in ['retrieve', 'list', 'participants', 'generate_tournament_bracket', 'games', 'winners']:
-            # generate_tournament_bracket - udalit' etu kerek
-            permission_classes = [AllowAny]
         return [permission() for permission in permission_classes]
     
-    def partial_update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-
-        # Check if the user is an "organizator"
-        if request.user.role == 'organizator':
-            allowed_fields = {'start_date', 'end_date', 'address'}
-            for field in set(serializer.fields) - allowed_fields:
-                if field in request.data:
-                    return Response({"error": f"Organizators can only update start_date, end_date, and address fields."},
-                                    status=status.HTTP_400_BAD_REQUEST)
-
+    @extend_schema(
+        summary="Update Competition Information",
+        description="Allows organizers of a competition to partially update information about that competition. "
+                    "The information that can be updated includes the competition's start date, end date, and address.",
+        request=UpdateCompetitionSerializer,
+        responses={
+            200: inline_serializer(
+                name='UpdateCompetitionResponse',
+                fields={
+                    'message': serializers.CharField(),
+                    'data': UpdateCompetitionSerializer()
+                }
+            ),
+            400: 'Invalid input or missing fields'
+    },
+    methods=['PATCH']
+)
+    def partial_update(self, request):
+        competition = self.get_object()
+        serializer = UpdateCompetitionSerializer(competition, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True) 
         serializer.save()
-        return Response(serializer.data)
-    
+        return Response({"message": "Competition information updated successfully", "data": serializer.data}, 
+                        status=status.HTTP_200_OK)
+
+    @extend_schema(
+        request=RegisterStudentSerializer,
+        responses={
+            201: inline_serializer(
+            name='RegisterStudentResponse',
+            fields={
+                'message': serializers.CharField(),
+                'data': ParticipantSerializer()
+            }
+        )
+        },
+        summary='Register a student for the competition',
+        description='This endpoint allows coaches to register theirs students for the competition.',
+        examples=[
+        OpenApiExample(
+            name='RegisterStudentRequestExample',
+            value={
+                'student_id': '5af1c8df-4733-4b7d-8132-8a731503dad3',
+                'age_category': '14-15',
+                'weight_category': '48kg'
+            },
+            request_only=True,
+            media_type='application/json'
+        ),
+        OpenApiExample(
+            name='RegisterStudentExample',
+            value={
+                'message': 'Student registered successfully.',
+                'data': {
+                    'student_id': '5af1c8df-4733-4b7d-8132-8a731503dad3',
+                    'age_category': '14-15',
+                    'weight_category': '48kg',
+                    'competition': '7bfae331-55cd-48f1-a906-3fb002e00bc0',
+                    'place': None
+                }
+            },
+            response_only=True,
+            status_codes=['201'],
+        )
+    ],
+    )
     @action(detail=True, methods=['post'], url_path='register_student')
     def register_student(self, request, pk=None):
-        competition = self.get_object()  # Get the competition instance
-        
-        student_id = request.data.get('student_id', None)
-        
-        if not student_id:
-            raise exceptions.ValidationError("Please provide student_id in the request data.")
+        competition = self.get_object() 
+        serializer = RegisterStudentSerializer(data=request.data, context={'competition': competition})
+        serializer.is_valid(raise_exception=True)
 
-        try:
-            student = Student.objects.get(pk=student_id)
-        except Student.DoesNotExist:
-            raise exceptions.NotFound("Student with the provided ID does not exist.")
+        student_id = serializer.validated_data.get('student_id')
+        age_category = serializer.validated_data.get('age_category')
+        weight_category = serializer.validated_data.get('weight_category')
         
-        if competition.participants.filter(participant=student).exists():
-            raise exceptions.ValidationError("Student is already registered for this competition.")
-    
-        age_category = request.data.get('age_category')
-        weight_category = request.data.get('weight_category')
+        participant_data = {
+            'participant': student_id,
+            'age_category': age_category,
+            'weight_category': weight_category,
+            'competition': competition.id
+        }
 
+        participant_serializer = ParticipantSerializer(data=participant_data)
+        participant_serializer.is_valid(raise_exception=True)
+        participant_serializer.save()
 
-        if age_category not in CATEGORIES:
-            return Response({"error": "Invalid age category for this competition."},
-                            status=status.HTTP_400_BAD_REQUEST)
-        
-        if weight_category not in CATEGORIES[age_category]:
-            return Response({"error": "Invalid weight category for this competition."},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        # Create a Participant instance
-        Participant.objects.create(
-            participant=student,
-            competition=competition,
-            age_category=request.data.get('age_category'),
-            weight_category=request.data.get('weight_category')
-        )
-        
-        return Response({"message": "Student registered successfully."},
+        return Response({"message": "Student registered successfully.", "data": participant_serializer.data},
                         status=status.HTTP_201_CREATED)
         
-    
+    @extend_schema(
+        summary='Unregister a student from the competition',
+        description='This endpoint allows coaches to unregister their student from the competition.',
+        examples=[
+            OpenApiExample(
+                name='UnregisterStudentRequest',
+                value={
+                    'student_id': '5af1c8df-4733-4b7d-8132-8a731503dad3',
+                },
+                request_only=True,
+                media_type='application/json'
+            ),
+            OpenApiExample(
+                name='UnregisterStudentResponse',
+                value={
+                    'message': 'Student unregistered successfully.',
+                    'data': {
+                        'student_id': '5af1c8df-4733-4b7d-8132-8a731503dad3',
+                    }
+                },
+                response_only=True,
+                status_codes=['200'],
+            )
+        ],
+    )
     @action(detail=True, methods=['post'], url_path='unregister_student')
     def unregister_student(self, request, pk=None):
-        competition = self.get_object()  # Get the competition instance
-        
-        # Assuming the student is passed in the request data
+        competition = self.get_object()
         student_id = request.data.get('student_id', None)
-        
         if not student_id:
-            raise exceptions.NotFound("Student with the provided ID does not exist.")
-        
+            raise exceptions.NotFound("Please provide student id in the request data.")
         try:
             participant = Participant.objects.get(participant_id=student_id, competition=competition)
         except Participant.DoesNotExist:
             return Response({"error": "Student is not registered for this competition."},
                             status=status.HTTP_400_BAD_REQUEST)
-        
-        # Delete the Participant instance
         participant.delete()
-        
-        return Response({"message": "Student unregistered successfully."},
+        return Response({"message": "Student unregistered successfully.", "data": {"student_id": student_id}},
                         status=status.HTTP_200_OK)
     
+    @extend_schema(
+        responses={
+            200: ParticipantSerializer(many=True)
+        },
+        summary='List all participants in a competition',
+        description='Retrieves a list of all participants registered in a specified competition.',
+    )
     @action(detail=True, methods=['get'], url_name='participants')
     def participants(self, request, pk=None):
-        competition = self.get_object()
+        competition = self.get_object() 
         participants = Participant.objects.filter(competition=competition)
         serializer = ParticipantSerializer(participants, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({"data": serializer.data}, status=status.HTTP_200_OK)
 
+    @extend_schema(
+        summary="Retrieve games based on optional filters",
+        description="Returns a list of games associated with a competition. "
+                    "The results can be further filtered by age category, weight category, and level.",
+        parameters=[
+            OpenApiParameter(name='age', type=OpenApiTypes.STR, required=False, description='Filter by age category'),
+            OpenApiParameter(name='weight', type=OpenApiTypes.STR, required=False, description='Filter by weight category'),
+            OpenApiParameter(name='level', type=OpenApiTypes.STR, required=False, description='Filter by competition level')
+        ],
+        examples=[
+            OpenApiExample(
+                name='ListGames',
+                value={
+                    'data': [
+                        {
+                        'id': 'f5806108-f192-456b-b20d-0b645689234d',
+                        'competition': '28fd386a-bfab-4a77-990a-cef25ebfa656',
+                        'red_corner': '528052fc-3048-4576-b844-cc3cabeb795b',
+                        'blue_corner': '94804990-8e92-45de-ba72-bb7b92d650d6',
+                        'age_category': '14-15',
+                        'weight_category': '44kg',
+                        "parent": "08c50e2b-9b6a-46bf-97fc-337e55d4f2cc",
+                        'level': 3,
+                        'winner': None
+                        }
+                    ]
+                },
+                response_only=True,
+                status_codes=['200'],
+            )
+        ],
+    )
     @action(detail=True, methods=['get'], url_name='games')
     def games(self, request, pk=None):
         competition = self.get_object()
         age_category = request.query_params.get('age')
         weight_category = request.query_params.get('weight')
         level = request.query_params.get('level')
-        
-        games = Game.objects.filter(competition=competition)
+        games = Game.objects.filter(competition=competition).order_by('index')
 
         if age_category and weight_category and level:
             games = Game.objects.filter(
@@ -142,129 +230,72 @@ class CompetitionViewsets(viewsets.ModelViewSet):
                     Q(weight_category=weight_category) &
                     Q(level=level) 
                 )
-        
+            
         serializer = GameSerializer(games, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({"data": serializer.data}, status=status.HTTP_200_OK)
         
+    @extend_schema(
+        summary="Retrieve winners for each category in a competition",
+        description="This endpoint returns a list of winners for each category (age, weight) "
+                    "in a given competition. Winners are those who achieved the first level in their respective categories.",
+        parameters=[
+            OpenApiParameter(
+                name='age', 
+                type=OpenApiTypes.STR, 
+                required=False, 
+                description='Filter winners by age category.'
+            )
+        ],
+        examples=[
+            OpenApiExample(
+                name='ListGames',
+                value={
+                    'data': [ {
+                            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                            "competition": "5af1c8df-4733-4b7d-8132-8a731503dad3",
+                            "participant": "08c50e2b-9b6a-46bf-97fc-337e55d4f2cc",
+                            "age_category": "14-15",
+                            "weight_category": "44kg",
+                            "place": 1
+                        }
+                    ]
+                },
+                response_only=True,
+                status_codes=['200'],
+            )
+        ],
+        responses={200: ParticipantSerializer(many=True)}
+    )
     @action(detail=True, methods=['get'], url_name='winners')
     def winners(self, request, pk=None):
         competition = self.get_object()
         age_category = request.query_params.get('age')
-
-        games = Game.objects.filter(competition=competition, level=1)
+        games = Game.objects.filter(competition=competition, level=1, place=1)
         if age_category:
             games = Game.objects.filter(competition=competition, age_category=age_category, level=1)
 
         winners = [game.winner for game in games if game.winner is not None]
-        
         serializer = ParticipantSerializer(winners, many=True)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({"data": serializer.data}, status=status.HTTP_200_OK)
     
 
-    def nextPowerOf2(self, length):
-        # Calculate log2 of N
-        if (length < 1):
-            return 0
-        a = math.log2(length)
-        a = int(a)
- 
-        if 2**a == length:
-            return length
-    
-        return 2**(a + 1)
-
+    @extend_schema(
+        summary="Generate Tournament Brackets",
+        description="Generates tournament brackets for each age and weight category.",
+        responses={201: inline_serializer(
+            name='RegisterStudentResponse',
+            fields={
+                'message': serializers.CharField(),
+            }
+            )
+        },
+        request=None
+    )
     @action(detail=True, methods=['post'], url_name='generate_tournament_bracket')
     def generate_tournament_bracket(self, request, pk=None):
-
         for age, weight_categories in CATEGORIES.items():
             for weight in weight_categories:
-                self.generate_tournament_bracket_logic(age, weight)
+                generate_tournament_bracket_logic(age, weight)
         
         return Response({"message": "Succesfully generated tournament bracket for all categories"}, status=status.HTTP_200_OK)
     
-    def generate_tournament_bracket_logic(self, age_category, weight_category):
-        competition = self.get_object()
-        participants = list(Participant.objects.filter(competition=competition, age_category=age_category, weight_category=weight_category))
-
-        next_power_of_two = self.nextPowerOf2(len(participants))
-
-        if next_power_of_two < 1:
-            return "There are no participants"
-
-        while len(participants) < next_power_of_two:
-            participants.append(None)
-
-        # normalize tut, sorting anau-mynau osynda bolu kerek
-        return self.generate_tournament_bracket_for_individual_category(participants=participants, age_category=age_category, weight_category=weight_category)
-        
-        
-    def generate_tournament_bracket_for_individual_category(self, participants, age_category, weight_category):
-    
-        level = math.log2(len(participants))
-        max_level = level
-        prev_level = []
-        current_level = []
-
-        if len(participants) == 0:
-            return Response({"message": "No games in {age_category} - {weight_category}"}, status=status.HTTP_200_OK)
-        
-        if len(participants) == 1:
-            g =  Game(competition=self.get_object(),
-                 blue_corner=participants[0], red_corner=None,
-                 age_category=age_category, weight_category=weight_category
-                 )
-            g.save()
-            return Response({"message": "Succesfully generated tournament bracket for single participant"}, status=status.HTTP_200_OK)
-        
-        index = 1
-        
-        for i in range(int(len(participants) / 2)):
-            player1_id = i
-            player2_id = len(participants) - 1 - i
-
-            if participants[player2_id] is None:
-                g = Game(competition=self.get_object(),
-                         blue_corner=participants[player1_id], red_corner=None,
-                         age_category=age_category, weight_category=weight_category, level=level, index=index)
-                g.save()
-                index += 1
-                prev_level.append(g)
-            else:
-                g = Game(competition=self.get_object(),
-                         blue_corner=participants[player1_id], red_corner=participants[player2_id],
-                         age_category=age_category, weight_category=weight_category, level=level, index=index)
-                g.save()
-                index += 1
-                prev_level.append(g)
-        
-        level -= 1
-
-        while level >= 1:
-            for i in range(0, len(prev_level), 2):
-                if level + 1 == max_level:
-                    if prev_level[i].red_corner is None:
-                        prev_level[i].winner = prev_level[i].blue_corner
-                    if prev_level[i + 1].red_corner is None:
-                        prev_level[i + 1].winner = prev_level[i + 1].blue_corner
-                
-                g = Game(competition=self.get_object(),
-                         blue_corner=prev_level[i].winner, red_corner=prev_level[i+1].winner,
-                         age_category=age_category, weight_category=weight_category, level=level, index=index)
-                index += 1
-
-                g.save()
-                
-                prev_level[i].parent = g
-                prev_level[i].save()
-                prev_level[i+1].parent = g
-                prev_level[i+1].save()
-                current_level.append(g)
-            
-            prev_level = current_level
-            current_level = []
-            
-            level -= 1
-
-
-        return Response({"message": "Succesfully generated tournament bracket"}, status=status.HTTP_200_OK)

@@ -14,7 +14,7 @@ class GameSerializer(serializers.ModelSerializer):
             "weight_category",
             "winner",
             "level",
-            "index"
+            # "index"
         ]
 
 class UpdateGameSerializer(serializers.ModelSerializer):

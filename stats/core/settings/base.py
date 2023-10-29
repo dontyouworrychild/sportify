@@ -37,9 +37,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+    # 3rd party
+    'rest_framework_simplejwt',
     'core.celery.CeleryConfig',
-    
+    'drf_spectacular',
+    'rest_framework',
     # local 
     'user.apps.UserConfig',
     'student.apps.StudentConfig',
@@ -120,6 +122,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.BasicAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 SIMPLE_JWT = {
@@ -133,6 +136,14 @@ SIMPLE_JWT = {
     "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
     "USER_ID_FIELD": "id",
     "USER_ID_CLAIM": "user_id"
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Sportify API',
+    'DESCRIPTION': 'Documentation for Sportify API Endpoints',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    # OTHER SETTINGS
 }
 
 AUTH_USER_MODEL = "user.User"

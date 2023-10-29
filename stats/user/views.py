@@ -15,11 +15,13 @@ from .serializers import (AuthTokenSerializer,
                           UpdateUserSerializer)
 from .permissions import IsOwner, IsAdmin
 
+from drf_spectacular.utils import extend_schema
+
 class CustomObtainTokenPairView(TokenObtainPairView):
     """Authenticate with username and password"""
     serializer_class = CustomObtainTokenPairSerializer
 
-
+@extend_schema(tags=['Password'])
 class AuthViewsets(viewsets.GenericViewSet):
     """Auth viewsets"""
     serializer_class = UsernameSerializer
@@ -57,19 +59,28 @@ class AuthViewsets(viewsets.GenericViewSet):
         token.reset_user_password(request.data['new_password'])
         token.delete()
         return Response({'success': True, 'message': 'Password successfully reset'}, status=status.HTTP_200_OK)
-
-
-class PasswordChangeView(viewsets.GenericViewSet):
-    '''Allows password change to authenticated user.'''
-    serializer_class = PasswordChangeSerializer
-    permission_classes = [IsAuthenticated]
-
-    def create(self, request):
+    
+    @action(methods=['POST'], detail=False, serializer_class=PasswordChangeSerializer, url_path='change-password')
+    def change_password(self, request):
+        '''Allows password change to authenticated user.'''
         context = {"request": request}
         serializer = self.get_serializer(data=request.data, context=context)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response({"message": "Your password has been updated."}, status=status.HTTP_200_OK)
+    
+
+# class PasswordChangeView(viewsets.GenericViewSet):
+#     '''Allows password change to authenticated user.'''
+#     serializer_class = PasswordChangeSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def create(self, request):
+#         context = {"request": request}
+#         serializer = self.get_serializer(data=request.data, context=context)
+#         serializer.is_valid(raise_exception=True)
+#         serializer.save()
+#         return Response({"message": "Your password has been updated."}, status=status.HTTP_200_OK)
 
 
 class CreateTokenView(ObtainAuthToken):
@@ -93,6 +104,7 @@ class CreateTokenView(ObtainAuthToken):
             return Response({"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@extend_schema(tags=['User'])
 class UserViewsets(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = ListUserSerializer
@@ -152,12 +164,12 @@ class UserViewsets(viewsets.ModelViewSet):
 
         return Response({"message": "Image updated successfully."}, status=status.HTTP_200_OK)
     
-    @action(detail=False, methods=['get'], url_path='(?P<username>\w+)')
-    def retrieve_by_username(self, request, username=None):
-        try:
-            user = User.objects.get(username=username)
-            serializer = ListUserSerializer(user)
-            return Response(serializer.data)
-        except User.DoesNotExist:
-            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+    # @action(detail=False, methods=['get'], url_path='(?P<username>\w+)')
+    # def retrieve_by_username(self, request, username=None):
+    #     try:
+    #         user = User.objects.get(username=username)
+    #         serializer = ListUserSerializer(user)
+    #         return Response(serializer.data)
+    #     except User.DoesNotExist:
+    #         return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
     
