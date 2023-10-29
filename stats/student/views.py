@@ -52,29 +52,23 @@ class StudentViewsets(viewsets.ModelViewSet):
         return Response({"message": "Student updated successfully", "data": serializer.data}, status=status.HTTP_200_OK)
     
     def create(self, request):
-        if self.request.user.is_authenticated:
-            coach_id = self.request.user.id
-            try:
-                coach = Coach.objects.get(id=coach_id)
-
-                student_data = {
+        coach_id = self.request.user.id
+        try:
+            coach = Coach.objects.get(id=coach_id)
+            student_data = {
                     'location': coach.location,
                     'sport_type': coach.sport_type,
                     'club': coach.club_id,
                     'coach': coach_id,
                     **request.data
                 }
+            serializer = self.get_serializer(data=student_data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
 
-                serializer = self.get_serializer(data=student_data)
-                serializer.is_valid(raise_exception=True)
-                self.perform_create(serializer)
-
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            except Coach.DoesNotExist:
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Coach.DoesNotExist:
                 return Response({"error": "Invalid coach ID."}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response({"error": "You are not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
-        
 
     @extend_schema(
     summary='Retrieve Last Fights of a Student',
@@ -136,15 +130,12 @@ class StudentViewsets(viewsets.ModelViewSet):
         games = []
         for participant in participants:
             current_games = Game.objects.filter(Q(red_corner=participant) | Q(blue_corner=participant)).order_by('-level')
-
             games_for_participant = []
-
             for current_game in current_games:
                 games_for_participant.append(current_game)
-            
+
             serializer = GameSerializer(games_for_participant, many=True)
             games.append(serializer.data)
-
         return Response({"data": games}, status=status.HTTP_200_OK)
 
     @extend_schema(

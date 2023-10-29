@@ -15,7 +15,7 @@ from .permissions import IsMe
 class CoachViewsets(UserViewsets):
     queryset = Coach.objects.all()
     serializer_class = CoachSerializer
-    http_method_names = ['get', 'list', 'patch']
+    http_method_names = ['get', 'patch']
 
     def get_permissions(self):
         permission_classes = [AllowAny]
