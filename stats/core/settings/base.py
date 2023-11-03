@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'core.celery.CeleryConfig',
     'drf_spectacular',
     'rest_framework',
+    'corsheaders',
     # local 
     'user.apps.UserConfig',
     'student.apps.StudentConfig',
@@ -60,6 +61,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -145,6 +147,11 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
     # OTHER SETTINGS
 }
+
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+
 
 AUTH_USER_MODEL = "user.User"
 
