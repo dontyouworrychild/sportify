@@ -2,12 +2,8 @@ from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path, include
-
-from rest_framework import permissions
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
-from rest_framework_swagger.views import get_swagger_view
-
-schema_view = get_swagger_view(title='API Documentation')
+from common.views import GlobalSearchAPIView
 
 
 urlpatterns = [
@@ -25,6 +21,7 @@ urlpatterns = [
     path('api/v1/coaches/', include('coach.urls')),
     path('api/v1/clubs/', include('club.urls')),
     path('api/v1/games/', include('game.urls')),
+    path('api/v1/search/', GlobalSearchAPIView.as_view(), name='global-search')
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # urlpatterns += [

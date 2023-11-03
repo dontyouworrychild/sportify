@@ -20,6 +20,7 @@ class StudentViewsets(viewsets.ModelViewSet):
     serializer_class = StudentSerializer
     permission_classes = [AllowAny]
     http_method_names = ['post', 'get', 'patch', 'delete']
+    search_fields = ['first_name', 'last_name']
 
     def get_permissions(self):
         if self.action in ['retrieve', 'list', 'last_fights', 'results_in_competitions']:
