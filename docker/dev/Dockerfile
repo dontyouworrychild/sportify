@@ -10,13 +10,13 @@ ENV PYTHONUNBUFFERED 1
 
 RUN apt-get update \
     && apt-get install -y libpq-dev gcc \
-    && pip install Pillow
+    && pip install Pillow --user
 
 
 # Install dependencies
 COPY ./stats/requirements ./requirements
-RUN pip install --user --upgrade pip
-RUN pip install --user -r ./requirements/dev.txt
+RUN pip install --upgrade pip
+RUN pip install -r ./requirements/dev.txt
 
 # Copy entrypoint.sh
 COPY ./docker/dev/entrypoint.sh /entrypoint.sh
