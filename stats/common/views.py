@@ -15,15 +15,15 @@ class GlobalSearchAPIView(APIView):
             return Response({"error": "No search query provided."}, status=status.HTTP_400_BAD_REQUEST)
         
         # Search in Students
-        students = Student.objects.filter(first_name__icontains=query) | Student.objects.filter(last_name__icontains=query)
+        students = Student.objects.filter(first_name__istartswith=query) | Student.objects.filter(last_name__istartswith=query)
         student_serializer = StudentSerializer(students, many=True)
 
         # Search in Coaches
-        coaches = Coach.objects.filter(first_name__icontains=query) | Coach.objects.filter(last_name__icontains=query)
+        coaches = Coach.objects.filter(first_name__istartswith=query) | Coach.objects.filter(last_name__istartswith=query)
         coach_serializer = CoachSerializer(coaches, many=True)
         
         # Search in Clubs
-        clubs = Club.objects.filter(name__icontains=query)
+        clubs = Club.objects.filter(name__istartswith=query)
         club_serializer = ClubSerializer(clubs, many=True)
         
         # Combine Results

@@ -109,7 +109,7 @@ class GameViewsets(viewsets.ModelViewSet):
                 corner.save()
 
     def update_parent_game(self, game, winner):
-        if game.parent:
+        if game.parent is not None:
             if not game.parent.red_corner or game.parent.red_corner in [game.red_corner, game.blue_corner]:
                 game.parent.red_corner = winner
             elif not game.parent.blue_corner or game.parent.blue_corner in [game.red_corner, game.blue_corner]:
