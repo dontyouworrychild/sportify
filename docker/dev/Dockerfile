@@ -1,8 +1,8 @@
 # Pull official base image 
 FROM python:3.10-slim
 
-RUN adduser -D sportify_user
-USER sportify_user
+RUN adduser -D sportify
+USER sportify
 # Set working directory
 WORKDIR /stats
 
@@ -16,15 +16,15 @@ RUN apt-get update \
 
 
 # Install dependencies
-COPY --chown=sportify_user:sportify_user ./stats/requirements ./requirements
+COPY --chown=sportify:sportify ./stats/requirements ./requirements
 RUN pip install --user --upgrade pip
 RUN pip install --user -r ./requirements/dev.txt
 
 # Copy entrypoint.sh
-COPY --chown=sportify_user:sportify_user ./docker/dev/entrypoint.sh /entrypoint.sh
+COPY --chown=sportify:sportify ./docker/dev/entrypoint.sh /entrypoint.sh
 
 # RUN chmod +x /entrypoint.sh
 
-COPY --chown=sportify_user:sportify_user ./stats /stats
+COPY --chown=sportify:sportify ./stats /stats
 
 # ENTRYPOINT ["/entrypoint.sh" ]
