@@ -270,12 +270,11 @@ class CompetitionViewsets(viewsets.ModelViewSet):
     def winners(self, request, pk=None):
         competition = self.get_object()
         age_category = request.query_params.get('age')
-        games = Game.objects.filter(competition=competition, level=1, place=1)
+        participants = Participant.objects.filter(competition=competition, place=1)
         if age_category:
-            games = Game.objects.filter(competition=competition, age_category=age_category, level=1)
-
-        winners = [game.winner for game in games if game.winner is not None]
-        serializer = ParticipantSerializer(winners, many=True)
+            participants = Participant.objects.filter(competition=competition, place=1, age_category=age_category)
+            
+        serializer = ParticipantSerializer(participants, many=True)
         return Response({"data": serializer.data}, status=status.HTTP_200_OK)
     
 
