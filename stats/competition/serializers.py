@@ -34,6 +34,11 @@ class UpdateCompetitionSerializer(serializers.ModelSerializer):
         ]
 
 class ParticipantSerializer(serializers.ModelSerializer):
+    first_name = serializers.SerializerMethodField()
+    last_name = serializers.SerializerMethodField()
+    location = serializers.SerializerMethodField()
+    club = serializers.SerializerMethodField()
+
     class Meta:
         model = Participant
         fields = [
@@ -42,8 +47,25 @@ class ParticipantSerializer(serializers.ModelSerializer):
             "participant",
             "age_category",
             "weight_category",
-            "place"
+            "place",
+            "first_name",
+            "last_name",
+            "location",
+            "club"
         ]
+
+    def get_first_name(self, obj):
+        return obj.participant.first_name if obj.participant else None
+    
+    def get_last_name(self, obj):
+        return obj.participant.last_name if obj.participant else None
+    
+    def get_location(self, obj):
+        return obj.participant.location if obj.participant else None
+
+    def get_club(self, obj):
+        return obj.participant.club if obj.participant else None
+
 
 class RegisterStudentSerializer(serializers.Serializer):
     student_id = serializers.UUIDField()
