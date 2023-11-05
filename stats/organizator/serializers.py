@@ -15,6 +15,16 @@ class OrganizatorSerializer(serializers.ModelSerializer):
             "role",
         ]
 
+class ListOrganizatorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organizator
+        fields = [
+            "id",
+            "first_name",
+            "last_name",
+            "image"
+        ]
+
 class UpdateOrganizatorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organizator

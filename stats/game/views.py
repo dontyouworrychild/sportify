@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiExample
 from competition.models import Participant
 from .models import Game
-from .serializers import GameSerializer, SelectWinnerSerializer
+from .serializers import GameSerializer, SelectWinnerSerializer, ListGameSerializer
 from .permissions import IsCompetitionOrganizator
 
 @extend_schema(tags=['Game'])
@@ -81,7 +81,7 @@ class GameViewsets(viewsets.ModelViewSet):
             return Response({"error": "Sorry, invalid participant selection"}, status=status.HTTP_400_BAD_REQUEST)
 
         self.update_winner(game, winner)
-        game_serializer = GameSerializer(game)
+        game_serializer = ListGameSerializer(game)
         return Response({"message": "Winner selected successfully", "data": game_serializer.data}, status=status.HTTP_200_OK)
 
     def get_participant(self, participant_id):
@@ -98,7 +98,13 @@ class GameViewsets(viewsets.ModelViewSet):
         self.update_parent_game(game, winner)
 
     def update_game(self, game, winner):
-        serializer = SelectWinnerSerializer(game, data={'winner': winner.id}, partial=True)
+        data = {'winner': winner.id}
+        if winner == game.red_corner:
+            data['red_corner_winner'] = True
+        elif winner == game.blue_corner:
+            data['blue_corner_winner'] = True
+
+        serializer = SelectWinnerSerializer(game, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -116,8 +122,8 @@ class GameViewsets(viewsets.ModelViewSet):
                 game.parent.blue_corner = winner
             game.parent.save()
         else:
-            game.place = 1
-            game.save()
+            winner.place = 1
+            winner.save()
 
 
 

@@ -1,5 +1,8 @@
 from rest_framework import serializers
-from .models import Competition, Participant, Student
+from .models import Competition, Participant, Student, Federation
+
+from student.serializers import StudentSerializer
+from organizator.serializers import ListOrganizatorSerializer
 
 CATEGORIES = {
     '6-7': ['24kg', '28kg', '32kg', '36kg', '40kg', '44kg', '48kg'],
@@ -10,7 +13,17 @@ CATEGORIES = {
     '16-17': ['44kg', '48kg', '52kg', '56kg', '60kg', '64kg', '68kg'],
 }  
 
+class ListFederationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Federation
+        fields = [
+            "name"
+        ]
+
 class CompetitionSerializer(serializers.ModelSerializer):
+    federation = ListFederationSerializer(read_only=True)
+    organizator = ListOrganizatorSerializer(read_only=True)
+
     class Meta:
         model = Competition
         fields = [
@@ -18,7 +31,7 @@ class CompetitionSerializer(serializers.ModelSerializer):
             "name",
             "start_date",
             "end_date",
-            "organizators",
+            "organizator",
             "location",
             "address",
             "federation"
@@ -33,38 +46,17 @@ class UpdateCompetitionSerializer(serializers.ModelSerializer):
             "address"
         ]
 
+
 class ParticipantSerializer(serializers.ModelSerializer):
-    first_name = serializers.SerializerMethodField()
-    last_name = serializers.SerializerMethodField()
-    location = serializers.SerializerMethodField()
-    club = serializers.SerializerMethodField()
+    student_info = StudentSerializer(read_only=True)
 
     class Meta:
         model = Participant
         fields = [
             "id",
-            "competition",
-            "participant",
-            "age_category",
-            "weight_category",
+            "student_info",
             "place",
-            "first_name",
-            "last_name",
-            "location",
-            "club"
         ]
-
-    def get_first_name(self, obj):
-        return obj.participant.first_name if obj.participant else None
-    
-    def get_last_name(self, obj):
-        return obj.participant.last_name if obj.participant else None
-    
-    def get_location(self, obj):
-        return obj.participant.location if obj.participant else None
-
-    def get_club(self, obj):
-        return obj.participant.club if obj.participant else None
 
 
 class RegisterStudentSerializer(serializers.Serializer):

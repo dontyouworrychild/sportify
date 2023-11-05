@@ -25,7 +25,7 @@ class Competition(models.Model):
     address = models.CharField(_("address"), max_length=50)
     
     # ArrayField siakty ma etu kerek, так как каждый competitionде бирнеше organizators бола алады
-    organizators = models.ForeignKey(Organizator, null=True, blank=True, on_delete=models.SET_NULL)
+    organizator = models.ForeignKey(Organizator, null=True, blank=True, on_delete=models.SET_NULL)
 
     federation = models.ForeignKey(Federation, null=True, blank=True, on_delete=models.SET_NULL)
 
@@ -40,11 +40,11 @@ class Competition(models.Model):
 class Participant(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     competition = models.ForeignKey(Competition, related_name='participants', on_delete=models.CASCADE)
-    participant = models.ForeignKey(Student, related_name='competitions', on_delete=models.CASCADE)
+    student_info = models.ForeignKey(Student, related_name='competitions', on_delete=models.CASCADE)
     age_category = models.CharField(max_length=5, choices=AGE_CATEGORY_CHOICE)
     weight_category = models.CharField(max_length=5, choices=WEIGHT_CATEGORY_CHOICE)
     place = models.IntegerField(null=True, blank=True)
 
     def __str__(self) -> str:
-        return f"{self.participant.first_name} {self.participant.last_name} - ({self.participant.club.name}, {self.participant.club.location} - ({self.place})) : {self.id}"
+        return f"{self.student_info.first_name} {self.student_info.last_name} - ({self.student_info.club.name}, {self.student_info.club.location} - ({self.place})) : {self.id}"
 

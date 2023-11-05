@@ -21,7 +21,7 @@ class IsCompetitionOrganizator(permissions.BasePermission):
         if request.user in game.competition.organizators:
             return True
         '''
-        if request.user.id == game.competition.organizators.id:
+        if request.user.id == game.competition.organizator.id:
             return True
 
         return False

@@ -6,7 +6,7 @@ from rest_framework.permissions import AllowAny
 from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiExample, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 from game.models import Game
-from game.serializers import GameSerializer
+from game.serializers import GameSerializer, ListGameSerializer
 from organizator.permissions import IsOrganizator
 from .models import Competition, Participant
 from .serializers import CompetitionSerializer, ParticipantSerializer, UpdateCompetitionSerializer, RegisterStudentSerializer
@@ -231,7 +231,7 @@ class CompetitionViewsets(viewsets.ModelViewSet):
                     Q(level=level) 
                 )
             
-        serializer = GameSerializer(games, many=True)
+        serializer = ListGameSerializer(games, many=True)
         return Response({"data": serializer.data}, status=status.HTTP_200_OK)
         
     @extend_schema(

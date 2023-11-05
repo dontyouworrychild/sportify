@@ -17,6 +17,16 @@ class CoachSerializer(serializers.ModelSerializer):
             "phone_number"
         ]
 
+class ListCoachForStudentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Coach
+        fields = [
+            "id",
+            "first_name",
+            "last_name",
+            "image"
+        ]
+
 class UpdateCoachSerializer(serializers.ModelSerializer):
     class Meta:
         model = Coach

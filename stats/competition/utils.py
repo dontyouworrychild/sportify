@@ -35,7 +35,7 @@ def generate_bracket_for_category(participants, age_category, weight_category, c
 
         
     if len(participants) == 1:
-        g = Game(competition=competition, blue_corner=participants[0], red_corner=None, age_category=age_category, weight_category=weight_category)
+        g = Game(competition=competition, blue_corner=participants[0], red_corner=None, age_category=age_category, weight_category=weight_category, blue_corner_winner=True)
         g.save()
         return "Succesfully generated tournament bracket for single participant"
         
@@ -48,7 +48,7 @@ def generate_bracket_for_category(participants, age_category, weight_category, c
         if participants[player2_id] is None:
             g = Game(competition=competition,
                     blue_corner=participants[player1_id], red_corner=None,
-                    age_category=age_category, weight_category=weight_category, level=level, index=index)
+                    age_category=age_category, weight_category=weight_category, level=level, index=index, blue_corner_winner=True)
             g.save()
             index += 1
             prev_level.append(g)
