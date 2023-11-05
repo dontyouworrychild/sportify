@@ -7,7 +7,7 @@ class CoachAdmin(admin.ModelAdmin):
     exclude = ('role', 'is_staff', 'is_active', 'is_admin', 'last_login', 'groups', 'is_superuser', 'user_permissions')
 
     fieldsets = (
-        (None, {"fields": ("username", "password", "phone_number", "first_name", "last_name", "image", "club")}),
+        (None, {"fields": ("username", "password", "phone_number", "first_name", "last_name", "image", "club", "location")}),
     )
     list_display = ("username", "phone_number", "first_name", "last_name", "image", "club")
 
