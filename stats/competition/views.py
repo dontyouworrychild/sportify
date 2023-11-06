@@ -3,10 +3,10 @@ from rest_framework import status, viewsets, exceptions, serializers
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
-from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiExample, OpenApiParameter
+from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 from game.models import Game
-from game.serializers import GameSerializer, ListGameSerializer
+from game.serializers import ListGameSerializer
 from organizator.permissions import IsOrganizator
 from .models import Competition, Participant
 from .serializers import CompetitionSerializer, ParticipantSerializer, UpdateCompetitionSerializer, RegisterStudentSerializer
@@ -14,18 +14,18 @@ from .permissions import IsPresident, IsStudentCoach
 from .utils import generate_tournament_bracket_logic
 
 CATEGORIES = {
-    '6-7': ['24kg', '28kg', '32kg', '36kg', '40kg', '44kg', '48kg'],
-    '8-9': ['28kg', '32kg', '36kg', '40kg', '44kg', '48kg', '52kg'],
-    '10-11': ['32kg', '36kg', '40kg', '44kg', '48kg', '52kg', '56kg'],
-    '12-13': ['36kg', '40kg', '44kg', '48kg', '52kg', '56kg', '60kg'],
-    '14-15': ['40kg', '44kg', '48kg', '52kg', '56kg', '60kg', '64kg'],
-    '16-17': ['44kg', '48kg', '52kg', '56kg', '60kg', '64kg', '68kg'],
+    '6-7': ['44kg', '48kg', '52kg', '56kg', '60kg', '64kg', '68kg', '72kg', '76kg'],
+    '8-9': ['44kg', '48kg', '52kg', '56kg', '60kg', '64kg', '68kg', '72kg', '76kg'],
+    '10-11': ['44kg', '48kg', '52kg', '56kg', '60kg', '64kg', '68kg', '72kg', '76kg'],
+    '12-13': ['44kg', '48kg', '52kg', '56kg', '60kg', '64kg', '68kg', '72kg', '76kg'],
+    '14-15': ['44kg', '48kg', '52kg', '56kg', '60kg', '64kg', '68kg', '72kg', '76kg'],
+    '16-17': ['44kg', '48kg', '52kg', '56kg', '60kg', '64kg', '68kg', '72kg', '76kg'],
 }  
 
 
 @extend_schema(tags=['Competition'])
 class CompetitionViewsets(viewsets.ModelViewSet):
-    queryset = Competition.objects.all()
+    queryset = Competition.objects.all().select_related('organizator', 'federation')
     serializer_class = CompetitionSerializer
     # http_method_names = ['get', 'post', 'patch', 'delete']
     http_method_names = ['get', 'patch', 'post']
@@ -78,33 +78,6 @@ class CompetitionViewsets(viewsets.ModelViewSet):
         },
         summary='Register a student for the competition',
         description='This endpoint allows coaches to register theirs students for the competition.',
-        examples=[
-        OpenApiExample(
-            name='RegisterStudentRequestExample',
-            value={
-                'student_id': '5af1c8df-4733-4b7d-8132-8a731503dad3',
-                'age_category': '14-15',
-                'weight_category': '48kg'
-            },
-            request_only=True,
-            media_type='application/json'
-        ),
-        OpenApiExample(
-            name='RegisterStudentExample',
-            value={
-                'message': 'Student registered successfully.',
-                'data': {
-                    'student_id': '5af1c8df-4733-4b7d-8132-8a731503dad3',
-                    'age_category': '14-15',
-                    'weight_category': '48kg',
-                    'competition': '7bfae331-55cd-48f1-a906-3fb002e00bc0',
-                    'place': None
-                }
-            },
-            response_only=True,
-            status_codes=['201'],
-        )
-    ],
     )
     @action(detail=True, methods=['post'], url_path='register_student')
     def register_student(self, request, pk=None):
@@ -133,27 +106,6 @@ class CompetitionViewsets(viewsets.ModelViewSet):
     @extend_schema(
         summary='Unregister a student from the competition',
         description='This endpoint allows coaches to unregister their student from the competition.',
-        examples=[
-            OpenApiExample(
-                name='UnregisterStudentRequest',
-                value={
-                    'student_id': '5af1c8df-4733-4b7d-8132-8a731503dad3',
-                },
-                request_only=True,
-                media_type='application/json'
-            ),
-            OpenApiExample(
-                name='UnregisterStudentResponse',
-                value={
-                    'message': 'Student unregistered successfully.',
-                    'data': {
-                        'student_id': '5af1c8df-4733-4b7d-8132-8a731503dad3',
-                    }
-                },
-                response_only=True,
-                status_codes=['200'],
-            )
-        ],
     )
     @action(detail=True, methods=['post'], url_path='unregister_student')
     def unregister_student(self, request, pk=None):
@@ -167,7 +119,7 @@ class CompetitionViewsets(viewsets.ModelViewSet):
             return Response({"error": "Student is not registered for this competition."},
                             status=status.HTTP_400_BAD_REQUEST)
         participant.delete()
-        return Response({"message": "Student unregistered successfully.", "data": {"student_id": student_id}},
+        return Response({"message": "Student unregistered successfully."},
                         status=status.HTTP_200_OK)
     
     @extend_schema(
@@ -180,7 +132,7 @@ class CompetitionViewsets(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'], url_name='participants')
     def participants(self, request, pk=None):
         competition = self.get_object() 
-        participants = Participant.objects.filter(competition=competition)
+        participants = Participant.objects.filter(competition=competition).select_related('student_info', 'student_info__club', 'student_info__coach')
         serializer = ParticipantSerializer(participants, many=True)
         return Response({"data": serializer.data}, status=status.HTTP_200_OK)
 
@@ -193,28 +145,6 @@ class CompetitionViewsets(viewsets.ModelViewSet):
             OpenApiParameter(name='weight', type=OpenApiTypes.STR, required=False, description='Filter by weight category'),
             OpenApiParameter(name='level', type=OpenApiTypes.STR, required=False, description='Filter by competition level')
         ],
-        examples=[
-            OpenApiExample(
-                name='ListGames',
-                value={
-                    'data': [
-                        {
-                        'id': 'f5806108-f192-456b-b20d-0b645689234d',
-                        'competition': '28fd386a-bfab-4a77-990a-cef25ebfa656',
-                        'red_corner': '528052fc-3048-4576-b844-cc3cabeb795b',
-                        'blue_corner': '94804990-8e92-45de-ba72-bb7b92d650d6',
-                        'age_category': '14-15',
-                        'weight_category': '44kg',
-                        "parent": "08c50e2b-9b6a-46bf-97fc-337e55d4f2cc",
-                        'level': 3,
-                        'winner': None
-                        }
-                    ]
-                },
-                response_only=True,
-                status_codes=['200'],
-            )
-        ],
     )
     @action(detail=True, methods=['get'], url_name='games')
     def games(self, request, pk=None):
@@ -222,7 +152,9 @@ class CompetitionViewsets(viewsets.ModelViewSet):
         age_category = request.query_params.get('age')
         weight_category = request.query_params.get('weight')
         level = request.query_params.get('level')
-        games = Game.objects.filter(competition=competition).order_by('index')
+        games = Game.objects.filter(competition=competition).select_related('red_corner__student_info', 'blue_corner__student_info',
+                                          'red_corner__student_info__coach', 'blue_corner__student_info__coach',
+                                          'red_corner__student_info__club', 'blue_corner__student_info__club').order_by('index')
 
         if age_category and weight_category and level:
             games = Game.objects.filter(
@@ -246,31 +178,13 @@ class CompetitionViewsets(viewsets.ModelViewSet):
                 description='Filter winners by age category.'
             )
         ],
-        examples=[
-            OpenApiExample(
-                name='ListGames',
-                value={
-                    'data': [ {
-                            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                            "competition": "5af1c8df-4733-4b7d-8132-8a731503dad3",
-                            "participant": "08c50e2b-9b6a-46bf-97fc-337e55d4f2cc",
-                            "age_category": "14-15",
-                            "weight_category": "44kg",
-                            "place": 1
-                        }
-                    ]
-                },
-                response_only=True,
-                status_codes=['200'],
-            )
-        ],
         responses={200: ParticipantSerializer(many=True)}
     )
     @action(detail=True, methods=['get'], url_name='winners')
     def winners(self, request, pk=None):
         competition = self.get_object()
         age_category = request.query_params.get('age')
-        participants = Participant.objects.filter(competition=competition, place=1)
+        participants = Participant.objects.filter(competition=competition, place=1).select_related('student_info', 'student_info__club', 'student_info__coach')
         if age_category:
             participants = Participant.objects.filter(competition=competition, place=1, age_category=age_category)
             

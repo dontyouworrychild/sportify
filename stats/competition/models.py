@@ -46,5 +46,5 @@ class Participant(models.Model):
     place = models.IntegerField(null=True, blank=True)
 
     def __str__(self) -> str:
-        return f"{self.student_info.first_name} {self.student_info.last_name} - ({self.student_info.club.name}, {self.student_info.club.location} - ({self.place})) : {self.id}"
+        return f"{self.student_info.first_name} {self.student_info.last_name} - ({self.student_info.club.name}, {self.student_info.club.location} - ({self.place})) : {self.competition.name}"
 

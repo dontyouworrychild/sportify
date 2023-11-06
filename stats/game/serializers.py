@@ -20,7 +20,6 @@ class SelectWinnerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
         fields = [
-            'winner',
             'blue_corner_winner',
             'red_corner_winner'
         ]

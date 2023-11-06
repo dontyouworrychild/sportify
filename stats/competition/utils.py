@@ -64,17 +64,16 @@ def generate_bracket_for_category(participants, age_category, weight_category, c
 
     while level >= 1:
         for i in range(0, len(prev_level), 2):
+            blue_corner = None
+            red_corner = None
             if level + 1 == max_level:
-                if prev_level[i].red_corner is None:
-                    prev_level[i].winner = prev_level[i].blue_corner
-                if prev_level[i + 1].red_corner is None:
-                    prev_level[i + 1].winner = prev_level[i + 1].blue_corner
-                
+                blue_corner = prev_level[i].blue_corner if prev_level[i].blue_corner_winner else None
+                red_corner = prev_level[i+1].blue_corner if prev_level[i+1].blue_corner_winner else None
+            
             g = Game(competition=competition,
-                        blue_corner=prev_level[i].winner, red_corner=prev_level[i+1].winner,
+                        blue_corner=blue_corner, red_corner=red_corner,
                         age_category=age_category, weight_category=weight_category, level=level, index=index)
             index += 1
-
             g.save()
                 
             prev_level[i].parent = g

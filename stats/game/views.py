@@ -98,7 +98,7 @@ class GameViewsets(viewsets.ModelViewSet):
         self.update_parent_game(game, winner)
 
     def update_game(self, game, winner):
-        data = {'winner': winner.id}
+        data = {}
         if winner == game.red_corner:
             data['red_corner_winner'] = True
         elif winner == game.blue_corner:
@@ -109,19 +109,25 @@ class GameViewsets(viewsets.ModelViewSet):
         serializer.save()
 
     def assign_losers_ranking(self, game):
-        for corner in [game.red_corner, game.blue_corner]:
-            if corner and corner != game.winner:
-                corner.place = 2 ** (game.level - 1) + 1
-                corner.save()
+        loser = None
+        if game.red_corner_winner:
+            loser = game.blue_corner
+        elif game.blue_corner_winner:
+            loser = game.red_corner
+        
+        if loser:
+            loser.place = 2 ** (game.level - 1) + 1
+            loser.save()
 
     def update_parent_game(self, game, winner):
         if game.parent is not None:
-            if not game.parent.red_corner or game.parent.red_corner in [game.red_corner, game.blue_corner]:
-                game.parent.red_corner = winner
-            elif not game.parent.blue_corner or game.parent.blue_corner in [game.red_corner, game.blue_corner]:
+            if not game.parent.blue_corner:
                 game.parent.blue_corner = winner
+            elif not game.parent.red_corner:
+                game.parent.red_corner = winner
             game.parent.save()
         else:
+            # If the game does not have parent, then it means it is a final, and the winner should have place = 1
             winner.place = 1
             winner.save()
 

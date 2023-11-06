@@ -13,7 +13,6 @@ class Game(models.Model):
     parent = models.ForeignKey('Game', null=True, on_delete=models.SET_NULL, related_name="parent_fight")
     index = models.IntegerField(default=1)
     level = models.IntegerField(default=1)
-    winner = models.ForeignKey(Participant, null=True, blank=True, related_name='won_games', on_delete=models.SET_NULL)
     '''
     WIN_TYPE_CHOICES = (
         ('knockout', 'Knockout'),
@@ -29,10 +28,10 @@ class Game(models.Model):
 
     def __str__(self) -> str:
         if self.red_corner is not None and self.blue_corner is not None:
-            return f"{self.red_corner.student_info.first_name} {self.red_corner.student_info.last_name} - {self.blue_corner.student_info.first_name} {self.blue_corner.student_info.last_name} : {self.level}"
+            return f"{self.red_corner.student_info.first_name} {self.red_corner.student_info.last_name} - {self.blue_corner.student_info.first_name} {self.blue_corner.student_info.last_name} : {self.level} - {self.competition.name}"
         elif self.red_corner is not None:
-            return f"{self.red_corner.student_info.first_name} {self.red_corner.student_info.last_name} - None : {self.level}"
+            return f"{self.red_corner.student_info.first_name} {self.red_corner.student_info.last_name} - None : {self.level} - {self.competition.name}"
         elif self.blue_corner is not None:
-            return f"None - {self.blue_corner.student_info.first_name} {self.blue_corner.student_info.last_name} : {self.level}"
+            return f"None - {self.blue_corner.student_info.first_name} {self.blue_corner.student_info.last_name} : {self.level} - {self.competition.name}"
         
-        return f"{self.id} : {self.level}"
+        return f"{self.id} : {self.level} - {self.competition.name}"
