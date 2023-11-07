@@ -13,7 +13,6 @@ class GameSerializer(serializers.ModelSerializer):
             "blue_corner",
             "red_corner_winner",
             "blue_corner_winner",
-            "winner",
         ]
 
 class SelectWinnerSerializer(serializers.ModelSerializer):
