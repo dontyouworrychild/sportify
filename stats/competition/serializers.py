@@ -1,8 +1,9 @@
 from rest_framework import serializers
-from .models import Competition, Participant, Student, Federation
+from .models import Competition, Participant, Student, Federation, Region
 
 from student.serializers import StudentSerializer
 from organizator.serializers import ListOrganizatorSerializer
+from drf_spectacular.utils import extend_schema_field
 
 CATEGORIES = {
     '6-7': ['24kg', '28kg', '32kg', '36kg', '40kg', '44kg', '48kg'],
@@ -11,7 +12,15 @@ CATEGORIES = {
     '12-13': ['36kg', '40kg', '44kg', '48kg', '52kg', '56kg', '60kg'],
     '14-15': ['40kg', '44kg', '48kg', '52kg', '56kg', '60kg', '64kg'],
     '16-17': ['44kg', '48kg', '52kg', '56kg', '60kg', '64kg', '68kg'],
-}  
+} 
+
+class RegionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Region
+        fields = [
+            "slug",
+            "region"
+        ]
 
 class ListFederationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -21,8 +30,10 @@ class ListFederationSerializer(serializers.ModelSerializer):
         ]
 
 class CompetitionSerializer(serializers.ModelSerializer):
-    federation = ListFederationSerializer(read_only=True)
+    # federation = ListFederationSerializer(read_only=True)
     organizator = ListOrganizatorSerializer(read_only=True)
+    federation = serializers.SerializerMethodField()
+    region = serializers.SerializerMethodField()
 
     class Meta:
         model = Competition
@@ -34,8 +45,19 @@ class CompetitionSerializer(serializers.ModelSerializer):
             "organizator",
             "location",
             "address",
-            "federation"
+            "federation",
+            "competition_type",
+            "region"
         ]
+
+    @extend_schema_field(serializers.CharField())
+    def get_federation(self, obj):
+        return obj.federation.name if obj.federation else None
+
+    @extend_schema_field(serializers.CharField())
+    def get_region(self, obj):
+        # This method returns the string representation of the region
+        return obj.region.region if obj.region else None
 
 class UpdateCompetitionSerializer(serializers.ModelSerializer):
     class Meta:

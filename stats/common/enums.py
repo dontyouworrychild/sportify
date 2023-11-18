@@ -41,6 +41,30 @@ WEIGHT_CATEGORY_CHOICE = (
     ("76kg", "76kg")
 )
 
+REGIONS = (
+    ("abai_region", _("Abai region")),
+    ("akmola_region", _("Akmola region")),
+    ("aktobe_region", _("Aktobe Region")),
+    ("almaty_city", _("Almaty city")),
+    ("almaty_region", _("Almaty region")),
+    ("astana_city", _("Astana city")),
+    ("atyrau_region", _("Atyrau region")),
+    ("baikonur_city", _("Baikonur city")),
+    ("east_kazakhstan_region", _("East Kazakhstan region")),
+    ("jambyl_region", _("Jambyl region")),
+    ("jetisu_region", _("Jetisu region")),
+    ("karaganda_region", _("Karaganda region")),
+    ("kostanay_region", _("Kostanay region")),
+    ("kyzylorda_region", _("Kyzylorda region")),
+    ("mangystau_region", _("Mangystau region")),
+    ("north_kazakhstan_region", _("North Kazakhstan region")),
+    ("pavlodar_region", _("Pavlodar region")),
+    ("shymkent_city", _("Shymkent city")),
+    ("turkistan_region", _("Turkistan region")),
+    ("ulytau_region", _("Ulytau region")),
+    ("west_kazakhstan_region", _("West Kazakhstan region"))
+)
+
 @dataclass
 class TokenEnum:
     PASSWORD_RESET = _("PASSWORD_RESET")

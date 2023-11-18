@@ -8,8 +8,8 @@ from drf_spectacular.types import OpenApiTypes
 from game.models import Game
 from game.serializers import ListGameSerializer
 from organizator.permissions import IsOrganizator
-from .models import Competition, Participant
-from .serializers import CompetitionSerializer, ParticipantSerializer, UpdateCompetitionSerializer, RegisterStudentSerializer
+from .models import Competition, Participant, Region
+from .serializers import CompetitionSerializer, ParticipantSerializer, UpdateCompetitionSerializer, RegisterStudentSerializer, RegionSerializer
 from .permissions import IsPresident, IsStudentCoach
 from .utils import generate_tournament_bracket_logic
 
@@ -29,6 +29,48 @@ class CompetitionViewsets(viewsets.ModelViewSet):
     serializer_class = CompetitionSerializer
     # http_method_names = ['get', 'post', 'patch', 'delete']
     http_method_names = ['get', 'patch', 'post']
+
+    @extend_schema(
+        summary='List competitions based on the region parameter',
+        description="""List competitions based on the region parameter. If NO parameters, then it would show ONLY the republic competitions
+        <br>
+        <br>
+        Below the region parameter options:
+        <br>
+        <br>
+        <br>
+
+        abai_region - Абай облысы 
+        akmola_region - Ақмола облысы
+        aktobe_region - Ақтөбе облысы
+        almaty_city - Алматы қаласы
+        almaty_region - Алматы облысы
+        astana_city - Астана қаласы
+        atyrau_region - Атырау облысы
+        baikonur_city - Байқоңыр қаласы
+        east_kazakhstan_region - Шығыс Қазақстан облысы
+        jambyl_region - Жамбыл облысы
+        jetisu_region - Жетісу облысы
+        karaganda_region - Қарағанды облысы
+        kostanay_region - Қостанай облысы
+        kyzylorda_region - Қызылорда облысы
+        mangystau_region - Маңғыстау облысы
+        north_kazakhstan_region - Солтүстік Қазақстан облысы
+        pavlodar_region - Павлодар облысы
+        shymkent_city - Шымкент қаласы
+        turkistan_region - Түркістан облысы
+        ulytau_region - Ұлытау облысы
+        west_kazakhstan_region - Батыс Қазақстан облысы
+        """,
+        parameters=[
+            OpenApiParameter(name='region', type=OpenApiTypes.STR, required=False, description='Filter by age category'),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        region = request.query_params.get('region', None)
+        competitions = Competition.objects.filter(region__slug=region)
+        serializer = CompetitionSerializer(competitions, many=True)
+        return Response({"data": serializer.data}, status=status.HTTP_200_OK)
 
     def get_permissions(self):
         permission_classes = [AllowAny]
@@ -53,10 +95,15 @@ class CompetitionViewsets(viewsets.ModelViewSet):
                     'data': UpdateCompetitionSerializer()
                 }
             ),
-            400: 'Invalid input or missing fields'
-    },
-    methods=['PATCH']
-)
+            400: inline_serializer(
+                name='InvalidInputResponse',
+                fields={
+                    'error': serializers.CharField(),
+                }
+            )
+        },
+        methods=['PATCH']
+    )
     def partial_update(self, request):
         competition = self.get_object()
         serializer = UpdateCompetitionSerializer(competition, data=request.data, partial=True)

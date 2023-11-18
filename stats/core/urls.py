@@ -3,7 +3,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
-from common.views import GlobalSearchAPIView
+from common.views import GlobalSearchAPIView, RegionAPIView
 
 
 urlpatterns = [
@@ -21,7 +21,8 @@ urlpatterns = [
     path('api/v1/coaches/', include('coach.urls')),
     path('api/v1/clubs/', include('club.urls')),
     path('api/v1/games/', include('game.urls')),
-    path('api/v1/search/', GlobalSearchAPIView.as_view(), name='global-search')
+    path('api/v1/search/', GlobalSearchAPIView.as_view(), name='global-search'),
+    path('api/v1/regions', RegionAPIView.as_view(), name='regions')
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # urlpatterns += [

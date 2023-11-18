@@ -23,30 +23,30 @@ class GameViewsets(viewsets.ModelViewSet):
     @extend_schema(
         summary="Disable Creation of New Games",
         description="Prevents the creation of new Game instances via POST request.",
-        request=None,
-        responses={
-            405: OpenApiExample(
-                "Method Not Allowed",
-                summary="Creation of new games via POST is not allowed",
-                description="This response is returned when a POST request is made attempting to create a new Game instance.",
-                value={"error": "Creation of new games via POST is not allowed."},
-                response_only=True,
-                status_codes=["405"],
-            )
-        },
-        examples=[
-            OpenApiExample(
-                name='DisablePostGame',
-                value={
-                    "error": "Creation of new games via POST is not allowed."
-                },
-                response_only=True,
-                media_type='application/json',
-                status_codes=['405']
-            ),
-        ]
+        # request=GameSerializer,
+        # responses={
+        #     405: OpenApiExample(
+        #         "Method Not Allowed",
+        #         summary="Creation of new games via POST is not allowed",
+        #         description="This response is returned when a POST request is made attempting to create a new Game instance.",
+        #         value={"error": "Creation of new games via POST is not allowed."},
+        #         response_only=True,
+        #         status_codes=["405"],
+        #     )
+        # },
+        # examples=[
+        #     OpenApiExample(
+        #         name='DisablePostGame',
+        #         value={
+        #             "error": "Creation of new games via POST is not allowed."
+        #         },
+        #         response_only=True,
+        #         media_type='application/json',
+        #         status_codes=['405']
+        #     ),
+        # ]
     )
-    def create(self):
+    def create(self, request):
         """
         Override the create method to disable POST requests for creating a new Game.
         """
