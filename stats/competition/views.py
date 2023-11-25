@@ -68,7 +68,9 @@ class CompetitionViewsets(viewsets.ModelViewSet):
     )
     def list(self, request, *args, **kwargs):
         region = request.query_params.get('region', None)
-        competitions = Competition.objects.filter(region__slug=region)
+        competitions = Competition.objects.filter(
+            Q(region__slug=region) | Q(region__isnull=True, competition_type="republic")
+        )
         serializer = CompetitionSerializer(competitions, many=True)
         return Response({"data": serializer.data}, status=status.HTTP_200_OK)
 
