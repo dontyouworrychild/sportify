@@ -9,7 +9,7 @@ from game.models import Game
 from game.serializers import ListGameSerializer
 from organizator.permissions import IsOrganizator
 from .models import Competition, Participant, Region
-from .serializers import CompetitionSerializer, ParticipantSerializer, UpdateCompetitionSerializer, RegisterStudentSerializer, RegionSerializer
+from .serializers import CompetitionSerializer, ParticipantSerializer, UpdateCompetitionSerializer, RegisterStudentSerializer, RegionSerializer, CreateParticipantSerializer
 from .permissions import IsPresident, IsStudentCoach
 from .utils import generate_tournament_bracket_logic
 
@@ -141,15 +141,19 @@ class CompetitionViewsets(viewsets.ModelViewSet):
         student_id = serializer.validated_data.get('student_id')
         age_category = serializer.validated_data.get('age_category')
         weight_category = serializer.validated_data.get('weight_category')
+
+        print(f"Competition id {competition.id}")
         
         participant_data = {
-            'participant': student_id,
+            'student_info': student_id,
             'age_category': age_category,
             'weight_category': weight_category,
             'competition': competition.id
         }
 
-        participant_serializer = ParticipantSerializer(data=participant_data)
+        print(participant_data)
+
+        participant_serializer = CreateParticipantSerializer(data=participant_data)
         participant_serializer.is_valid(raise_exception=True)
         participant_serializer.save()
 
@@ -167,7 +171,7 @@ class CompetitionViewsets(viewsets.ModelViewSet):
         if not student_id:
             raise exceptions.NotFound("Please provide student id in the request data.")
         try:
-            participant = Participant.objects.get(participant_id=student_id, competition=competition)
+            participant = Participant.objects.get(student_info_id=student_id, competition=competition)
         except Participant.DoesNotExist:
             return Response({"error": "Student is not registered for this competition."},
                             status=status.HTTP_400_BAD_REQUEST)

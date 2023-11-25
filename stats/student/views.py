@@ -6,13 +6,17 @@ from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiExample
 from coach.models import Coach
 from competition.models import Participant
-from competition.serializers import ParticipantSerializer
+from competition.serializers import ParticipantSerializer, StudentResultsInCompetitionsSerializer
 from game.serializers import GameSerializer
 from game.models import Game
 from .models import Student
 from .serializers import StudentSerializer, UpdateStudentSerializer
 from .permissions import IsStudentCoach, IsCoach
-
+# from game.serializers import ListStudentLastGamesSerializer
+from competition.serializers import ListNameCompetitionSerializer
+from game.serializers import StudentLastGamesModelGameSerializer
+# from .serializers import StudentResultsInCompetitionsSerializer
+# from competition.serializers import StudentResultsInCompetitionsSerializer
 
 @extend_schema(tags=['Student'])
 class StudentViewsets(viewsets.ModelViewSet):
@@ -74,70 +78,35 @@ class StudentViewsets(viewsets.ModelViewSet):
     @extend_schema(
     summary='Retrieve Last Fights of a Student',
     description='Fetches a list of the most recent fights for a given student, organized by competition start date.',
-    examples=[
-            OpenApiExample(
-                name='RetrieveLastFightsOfStudent',
-                summary='Retrieve a list of the most recent fights for a given student',
-                value={
-                    "data": [
-                        [ 
-                            {
-                                "id": "0ea55364-7acf-443b-b259-1fd84e83dfee",
-                                "competition": "7bfae331-55cd-48f1-a906-3fb002e00bc0",
-                                "red_corner": None,
-                                "blue_corner": "3797a702-f655-4f6f-9a69-32623ff3c61e",
-                                "parent": "44b6cb7b-f0d2-41bf-82e9-f9ca404f81f1",
-                                "age_category": "12-13",
-                                "weight_category": "48kg",
-                                "winner": "3797a702-f655-4f6f-9a69-32623ff3c61e",
-                                "level": 3
-                            },
-                            {
-                                "id": "44b6cb7b-f0d2-41bf-82e9-f9ca404f81f1",
-                                "competition": "7bfae331-55cd-48f1-a906-3fb002e00bc0",
-                                "red_corner": "a5843a7f-59cd-4235-b4d5-4510627a9018",
-                                "blue_corner": "3797a702-f655-4f6f-9a69-32623ff3c61e",
-                                "parent": "53146ca6-905c-45c0-babc-7c15558cf4f2",
-                                "age_category": "12-13",
-                                "weight_category": "48kg",
-                                "winner": "a5843a7f-59cd-4235-b4d5-4510627a9018",
-                                "level": 2
-                            },
-                        ],
-                        [ 
-                            {
-                                "id": "eeaa7b1b-3fab-4e3b-b17f-4155063bc7b9",
-                                "competition": "5af1c8df-4733-4b7d-8132-8a731503dad3",
-                                "red_corner": "3797a702-f655-4f6f-9a69-32623ff3c61e",
-                                "blue_corner": "830d5a7c-4817-416b-9246-b062b74e89da",
-                                "parent": "44b6cb7b-f0d2-41bf-82e9-f9ca404f81f1",
-                                "age_category": "12-13",
-                                "weight_category": "48kg",
-                                "winner": "830d5a7c-4817-416b-9246-b062b74e89da",
-                                "level": 2
-                            }
-                        ],
-                    ]
-                },
-                response_only=True,
-                status_codes=['200'],
-            )
-        ]
     )
-    @action(detail=True, methods=['get'], url_name='last-fights')
+    @action(detail=True, methods=['get'], url_name='last_fights')
     def last_fights(self, request, pk=None):
         student = self.get_object()
-        participants = Participant.objects.filter(participant=student).order_by('competition__start_date')
-        games = []
+        participants = Participant.objects.filter(student_info=student).order_by('competition__start_date')
+        
+        competitions_games = {}
         for participant in participants:
-            current_games = Game.objects.filter(Q(red_corner=participant) | Q(blue_corner=participant)).order_by('-level')
-            games_for_participant = []
-            for current_game in current_games:
-                games_for_participant.append(current_game)
+            competition = participant.competition
+            if competition.id not in competitions_games:
+                competitions_games[competition.id] = {
+                    "competition": competition,
+                    "games": []
+                }
 
-            serializer = GameSerializer(games_for_participant, many=True)
-            games.append(serializer.data)
-        return Response({"data": games}, status=status.HTTP_200_OK)
+            current_games = Game.objects.filter(Q(red_corner=participant) | Q(blue_corner=participant)).order_by('-level')
+            for current_game in current_games:
+                competitions_games[competition.id]["games"].append(current_game)
+
+        results = []
+        for comp_id, data in competitions_games.items():
+            games_serializer = StudentLastGamesModelGameSerializer(data["games"], many=True, context={'student_id': student.id})
+            competition_serializer = ListNameCompetitionSerializer(data["competition"])
+            results.append({
+                "competition": competition_serializer.data,
+                "games": games_serializer.data
+            })
+
+        return Response({"data": results}, status=status.HTTP_200_OK)
 
     @extend_schema(
         summary="Get Competition Results of a Student",
@@ -161,9 +130,10 @@ class StudentViewsets(viewsets.ModelViewSet):
         )
     ],
     )
-    @action(detail=True, methods=['get'], url_name='results-in-competitions')
+    @action(detail=True, methods=['get'], url_name='results_in_competitions')
     def results_in_competitions(self, request, pk=None):
         student = self.get_object()
-        participants = Participant.objects.filter(participant=student).order_by('competition__start_date')
-        serializer = ParticipantSerializer(participants, many=True)
+        participants = Participant.objects.filter(student_info=student).order_by('competition__start_date')
+        games = Game.objects.filter(Q(red_corner__in=participants) | Q(blue_corner__in=participants)).order_by('-level')
+        serializer = StudentResultsInCompetitionsSerializer(games, many=True)
         return Response({"data": serializer.data}, status=status.HTTP_200_OK)

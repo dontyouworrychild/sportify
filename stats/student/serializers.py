@@ -3,6 +3,8 @@ from .models import Student
 
 from club.serializers import ClubSerializer
 from coach.serializers import ListCoachForStudentSerializer
+# from competition.models import Participant
+# from competition.serializers import ListNameCompetitionSerializer
 
 
 class StudentSerializer(serializers.ModelSerializer):

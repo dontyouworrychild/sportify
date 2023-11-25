@@ -60,6 +60,16 @@ class CompetitionSerializer(serializers.ModelSerializer):
         # This method returns the string representation of the region
         return obj.region.region if obj.region else None
 
+class ListNameCompetitionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Competition
+        fields = [
+            "id",
+            "name",
+            "start_date",
+            "end_date",
+        ]
+
 class UpdateCompetitionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Competition
@@ -81,6 +91,17 @@ class ParticipantSerializer(serializers.ModelSerializer):
             "place",
         ]
 
+class CreateParticipantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Participant
+        fields = [
+            "id",
+            "student_info",
+            "competition",
+            "age_category",
+            "weight_category"
+        ]
+
 
 class RegisterStudentSerializer(serializers.Serializer):
     student_id = serializers.UUIDField()
@@ -99,7 +120,7 @@ class RegisterStudentSerializer(serializers.Serializer):
 
     def validate_student_id(self, value):
         competition = self.context.get('competition')
-        if competition.participants.filter(participant__id=value).exists():
+        if competition.participants.filter(student_info_id=value).exists():
             raise serializers.ValidationError("Student is already registered for this competition.")
         is_student = Student.objects.filter(id=value).exists()
         if not is_student:
@@ -116,3 +137,23 @@ class RegisterStudentSerializer(serializers.Serializer):
         if value not in CATEGORIES.get(age_category, []):
             raise serializers.ValidationError("Invalid weight category for competition.")
         return value
+
+class ListStudentsResultsInCompetitionsSerializer(serializers.ModelSerializer):
+    competition = ListNameCompetitionSerializer(read_only=True)
+    class Meta:
+        model = Participant
+        fields = [
+            'age_category',
+            'weight_category',
+            'competition',
+            'place'
+        ]
+
+class StudentResultsInCompetitionsSerializer(serializers.ModelSerializer):
+    competition = ListNameCompetitionSerializer(read_only=True)
+    class Meta:
+        model = Participant
+        fields = [
+            "competition",
+            "place"
+        ]
