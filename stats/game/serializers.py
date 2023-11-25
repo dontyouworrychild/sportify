@@ -82,5 +82,7 @@ class StudentLastGamesModelGameSerializer(serializers.ModelSerializer):
             winner_id = obj.blue_corner.student_info.id
         if winner_id == student_id:
             return "Win"
+        if winner_id == None:
+            return "Did not start"
         return "Lost"
     
