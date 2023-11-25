@@ -134,6 +134,6 @@ class StudentViewsets(viewsets.ModelViewSet):
     def results_in_competitions(self, request, pk=None):
         student = self.get_object()
         participants = Participant.objects.filter(student_info=student).order_by('competition__start_date')
-        games = Game.objects.filter(Q(red_corner__in=participants) | Q(blue_corner__in=participants)).order_by('-level')
-        serializer = StudentResultsInCompetitionsSerializer(games, many=True)
+        # games = Game.objects.filter(Q(red_corner__in=participants) | Q(blue_corner__in=participants)).order_by('-level')
+        serializer = StudentResultsInCompetitionsSerializer(participants, many=True)
         return Response({"data": serializer.data}, status=status.HTTP_200_OK)
