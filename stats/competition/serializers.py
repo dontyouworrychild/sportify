@@ -19,7 +19,8 @@ class RegionSerializer(serializers.ModelSerializer):
         model = Region
         fields = [
             "slug",
-            "region"
+            "region",
+            "image"
         ]
 
 class ListFederationSerializer(serializers.ModelSerializer):

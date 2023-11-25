@@ -5,9 +5,14 @@ from organizator.models import Organizator
 from student.models import Student
 from common.enums import AGE_CATEGORY_CHOICE, WEIGHT_CATEGORY_CHOICE, REGIONS
 
+def image_directory_path(instance, filename):
+    extension = filename.split('.')[-1]
+    return f"regions/{instance.slug}.{extension}"
+
 class Region(models.Model):
     slug = models.CharField(max_length=100)
     region = models.CharField(max_length=100)
+    image = models.ImageField(upload_to=image_directory_path, blank=True, null=True)
     
     def __str__(self) -> str:
         return f"{self.region}"
