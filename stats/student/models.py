@@ -45,4 +45,7 @@ class LastRepublicWinner(models.Model):
     year = models.IntegerField(_('year'), choices=year_choices(), default=current_year)
     student = models.ForeignKey(Student, related_name='republic_winners', on_delete=models.CASCADE)
 
+    def __str__(self) -> str:
+        return f"{self.student.first_name} {self.student.last_name}"
+
     
