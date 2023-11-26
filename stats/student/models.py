@@ -1,4 +1,5 @@
 import uuid
+import datetime
 from django.utils.translation import gettext_lazy as _
 from django.db import models
 from coach.models import Coach
@@ -15,6 +16,8 @@ class Student(models.Model):
     image = models.ImageField(upload_to=student_directory_path, blank=True)
     coach = models.ForeignKey(Coach, verbose_name=_('coach'), related_name='students', null=True, on_delete=models.SET_NULL)
     club = models.ForeignKey(Club, verbose_name=_('club'), related_name='students', null=True, on_delete=models.SET_NULL)
+    date_of_birth = models.DateField(null=True, blank=True, default=datetime.date(2000, 1, 1))
+    is_master_sport = models.BooleanField(default=None)
 
     # Пока что пусь location осылай бола берсын, но в целом, 
     # бир определнный списоктын ишиндегы биреуын тандау керек
@@ -31,5 +34,15 @@ class Student(models.Model):
 
     def __str__(self) -> str:
         return f"{self.first_name} {self.last_name} - ({self.club.name}, {self.club.location})"
+
+def year_choices():
+    return [(r,r) for r in range(1984, datetime.date.today().year+1)]
+
+def current_year():
+    return datetime.date.today().year
+
+class LastRepublicWinner(models.Model):
+    year = models.IntegerField(_('year'), choices=year_choices(), default=current_year)
+    student = models.ForeignKey(Student, related_name='republic_winners', on_delete=models.CASCADE)
 
     
