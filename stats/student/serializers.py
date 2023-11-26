@@ -36,6 +36,8 @@ class UpdateStudentSerializer(serializers.ModelSerializer):
 
 class StudentProfileSerializer(serializers.ModelSerializer):
     is_republic_winner = serializers.SerializerMethodField()
+    club = ClubSerializer(read_only=True)
+    coach = ListCoachForStudentSerializer(read_only=True)
     class Meta:
         model = Student
         fields = [
