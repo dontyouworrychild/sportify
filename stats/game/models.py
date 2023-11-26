@@ -3,6 +3,11 @@ from competition.models import Competition, Participant
 from common.enums import AGE_CATEGORY_CHOICE, WEIGHT_CATEGORY_CHOICE
 import uuid
 
+WIN_TYPE_CHOICES = (
+    ('knockout', 'Техн. нокаут'),
+    ('points', 'По очкам'),
+)
+
 class Game(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     competition = models.ForeignKey(Competition, related_name='games', on_delete=models.CASCADE)
@@ -13,15 +18,7 @@ class Game(models.Model):
     parent = models.ForeignKey('Game', null=True, on_delete=models.SET_NULL, related_name="parent_fight")
     index = models.IntegerField(default=1)
     level = models.IntegerField(default=1)
-    '''
-    WIN_TYPE_CHOICES = (
-        ('knockout', 'Knockout'),
-        ('point', 'By points'),
-        ('no', 'Did not start')
-    )
-    win_type = models.CharField(max_length=15, choices=WIN_TYPE_CHOICES)
-    '''
-
+    win_type = models.CharField(max_length=15, choices=WIN_TYPE_CHOICES, blank=True, null=True)
 
     age_category = models.CharField(max_length=5, choices=AGE_CATEGORY_CHOICE)
     weight_category = models.CharField(max_length=5, choices=WEIGHT_CATEGORY_CHOICE)
