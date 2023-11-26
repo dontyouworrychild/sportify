@@ -16,7 +16,7 @@ class Student(models.Model):
     image = models.ImageField(upload_to=student_directory_path, blank=True)
     coach = models.ForeignKey(Coach, verbose_name=_('coach'), related_name='students', null=True, on_delete=models.SET_NULL)
     club = models.ForeignKey(Club, verbose_name=_('club'), related_name='students', null=True, on_delete=models.SET_NULL)
-    date_of_birth = models.DateField(null=True, blank=True, default=datetime.date(2000, 1, 1))
+    date_of_birth = models.DateField(blank=True, null=True, default=datetime.date(2000, 1, 1))
     is_master_sport = models.BooleanField(default=None)
 
     # Пока что пусь location осылай бола берсын, но в целом, 
