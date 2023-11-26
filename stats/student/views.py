@@ -10,7 +10,7 @@ from competition.serializers import ParticipantSerializer, StudentResultsInCompe
 from game.serializers import GameSerializer
 from game.models import Game
 from .models import Student
-from .serializers import StudentSerializer, UpdateStudentSerializer
+from .serializers import StudentSerializer, UpdateStudentSerializer, StudentProfileSerializer
 from .permissions import IsStudentCoach, IsCoach
 # from game.serializers import ListStudentLastGamesSerializer
 from competition.serializers import ListNameCompetitionSerializer
@@ -21,7 +21,7 @@ from game.serializers import StudentLastGamesModelGameSerializer
 @extend_schema(tags=['Student'])
 class StudentViewsets(viewsets.ModelViewSet):
     queryset = Student.objects.all()
-    serializer_class = StudentSerializer
+    serializer_class = StudentProfileSerializer
     permission_classes = [AllowAny]
     http_method_names = ['post', 'get', 'patch', 'delete']
     search_fields = ['first_name', 'last_name']
