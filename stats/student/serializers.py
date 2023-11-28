@@ -49,7 +49,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
             "location",
             "coach",
             "date_of_birth",
-            "is_master_sport",
+            "achievement",
             "is_republic_winner",
         ]
 
