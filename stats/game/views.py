@@ -82,6 +82,9 @@ class GameViewsets(viewsets.ModelViewSet):
 
         self.update_winner(game, winner)
         game_serializer = ListGameSerializer(game)
+        if game.level == 1:
+            winner.student_info.is_master_sport = True
+            winner.student_info.save()
         return Response({"message": "Winner selected successfully", "data": game_serializer.data}, status=status.HTTP_200_OK)
 
     def get_participant(self, participant_id):

@@ -17,7 +17,7 @@ class Student(models.Model):
     coach = models.ForeignKey(Coach, verbose_name=_('coach'), related_name='students', null=True, on_delete=models.SET_NULL)
     club = models.ForeignKey(Club, verbose_name=_('club'), related_name='students', null=True, on_delete=models.SET_NULL)
     date_of_birth = models.DateField(blank=True, null=True, default=datetime.date(2000, 1, 1))
-    is_master_sport = models.BooleanField(default=None)
+    achievement = models.CharField(blank=True, null=True)
 
     # Пока что пусь location осылай бола берсын, но в целом, 
     # бир определнный списоктын ишиндегы биреуын тандау керек
@@ -46,6 +46,6 @@ class LastRepublicWinner(models.Model):
     student = models.ForeignKey(Student, related_name='republic_winners', on_delete=models.CASCADE)
 
     def __str__(self) -> str:
-        return f"{self.student.first_name} {self.student.last_name}"
+        return f"{self.student.first_name} {self.student.last_name} - {self.year}"
 
     
