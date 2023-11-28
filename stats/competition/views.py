@@ -134,7 +134,7 @@ class CompetitionViewsets(viewsets.ModelViewSet):
     )
     @action(detail=True, methods=['post'], url_path='register_student')
     def register_student(self, request, pk=None):
-        competition = self.get_object() 
+        competition = self.get_object()  
         serializer = RegisterStudentSerializer(data=request.data, context={'competition': competition})
         serializer.is_valid(raise_exception=True)
 
