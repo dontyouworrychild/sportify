@@ -15,12 +15,17 @@ from .permissions import IsMe
 class CoachViewsets(UserViewsets):
     queryset = Coach.objects.all()
     serializer_class = CoachSerializer
-    http_method_names = ['get', 'patch']
+    http_method_names = ['get', 'patch', 'post']
 
-    def list(self, request, *args, **kwargs):
-        coaches = Coach.objects.all()
-        serializer = CoachPageSerializer(coaches, many=True)
-        return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+    # def list(self, request, *args, **kwargs):
+    #     coaches = Coach.objects.all()
+    #     serializer = CoachPageSerializer(coaches, many=True)
+    #     return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+
+    def get_serializer_class(self):
+        if self.action in ['retrieve', 'list']:
+            return CoachPageSerializer
+        return CoachSerializer
 
     def get_permissions(self):
         permission_classes = [AllowAny]
