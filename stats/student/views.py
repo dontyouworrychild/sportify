@@ -10,7 +10,7 @@ from competition.serializers import ParticipantSerializer, StudentResultsInCompe
 from game.serializers import GameSerializer
 from game.models import Game
 from .models import Student
-from .serializers import StudentSerializer, UpdateStudentSerializer, StudentProfileSerializer
+from .serializers import StudentSerializer, UpdateStudentSerializer, StudentProfileSerializer, CreateStudentSerializer
 from .permissions import IsStudentCoach, IsCoach
 # from game.serializers import ListStudentLastGamesSerializer
 from competition.serializers import ListNameCompetitionSerializer
@@ -25,6 +25,11 @@ class StudentViewsets(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
     http_method_names = ['post', 'get', 'patch', 'delete']
     search_fields = ['first_name', 'last_name']
+
+    def get_serializer_class(self):
+        if self.action in ['create']:
+            return CreateStudentSerializer
+        return StudentProfileSerializer
 
     def get_permissions(self):
         if self.action in ['retrieve', 'list', 'last_fights', 'results_in_competitions']:
@@ -60,13 +65,10 @@ class StudentViewsets(viewsets.ModelViewSet):
         coach_id = self.request.user.id
         try:
             coach = Coach.objects.get(id=coach_id)
-            student_data = {
-                    'location': coach.location,
-                    'sport_type': coach.sport_type,
-                    'club': coach.club_id,
-                    'coach': coach_id,
-                    **request.data
-                }
+            student_data = {key: value[0] for key, value in request.data.lists()}
+            student_data['location'] = coach.location
+            student_data['club'] = coach.club_id
+            student_data['coach'] = coach.id
             serializer = self.get_serializer(data=student_data)
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)

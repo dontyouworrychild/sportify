@@ -7,7 +7,7 @@ from student.models import Student
 from student.serializers import StudentSerializer
 from user.views import UserViewsets
 from .models import Coach
-from .serializers import CoachSerializer, UpdateCoachSerializer, CoachPageSerializer
+from .serializers import CoachSerializer, UpdateCoachSerializer, CoachPageSerializer, CreateCoachSerializer
 from .permissions import IsMe
 
 
@@ -21,10 +21,9 @@ class CoachViewsets(UserViewsets):
     #     coaches = Coach.objects.all()
     #     serializer = CoachPageSerializer(coaches, many=True)
     #     return Response({"data": serializer.data}, status=status.HTTP_200_OK)
-
     def get_serializer_class(self):
-        if self.action in ['retrieve', 'list']:
-            return CoachPageSerializer
+        if self.action in ['create']:
+            return CreateCoachSerializer
         return CoachSerializer
 
     def get_permissions(self):

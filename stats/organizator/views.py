@@ -12,7 +12,7 @@ class OrganizatorViewsets(UserViewsets):
     queryset = Organizator.objects.all()
     serializer_class = OrganizatorSerializer
     # permission_classes = [AllowAny]
-    http_method_names = ['get', 'patch']
+    http_method_names = ['get', 'patch', 'post']
     
     def get_permissions(self):
         permission_classes = [AllowAny]

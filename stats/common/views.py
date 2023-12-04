@@ -1,15 +1,12 @@
 from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, viewsets
+from rest_framework import status
 from student.models import Student
-from student.serializers import StudentSerializer
 from coach.models import Coach
-from coach.serializers import CoachSerializer
 from club.models import Club
-from club.serializers import ClubSerializer
-from competition.models import Region
-from competition.serializers import RegionSerializer
+from competition.models import Region, Federation
+from competition.serializers import RegionSerializer, ListFederationSerializer
 from drf_spectacular.utils import extend_schema
 from .serializers import GlobalSearchResultsSerializer
 
@@ -35,11 +32,12 @@ class GlobalSearchAPIView(GenericAPIView):
             'clubs': clubs,
         })
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
 
 @extend_schema(tags=['Region'])
 class RegionAPIView(APIView):
     queryset = Region
-    http_method_names = ['get']
+    http_method_names = ['get', 'post']
     serializer_class = RegionSerializer
 
     @extend_schema(
@@ -50,4 +48,41 @@ class RegionAPIView(APIView):
         regions = Region.objects.all()
         serializer = RegionSerializer(regions, many=True)
         return Response({"data": serializer.data}, status=status.HTTP_200_OK)
-        
+    
+    @extend_schema(
+        summary='Create a new region',
+        description='Add a new region to Kazakhstan\'s regions and republic cities'
+    )
+    
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"data": serializer.data}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+@extend_schema(tags=['Federation'])
+class FederationAPIView(APIView):
+    queryset = Federation
+    http_method_names = ['get', 'post']
+    serializer_class = ListFederationSerializer
+
+    @extend_schema(
+        summary='List all federations',
+    )
+    def get(self, request):
+        regions = Federation.objects.all()
+        serializer = ListFederationSerializer(regions, many=True)
+        return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+    
+    @extend_schema(
+        summary='Create a new federation',
+    )
+    
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"data": serializer.data}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

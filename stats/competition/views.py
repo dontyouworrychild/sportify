@@ -9,7 +9,7 @@ from game.models import Game
 from game.serializers import ListGameSerializer
 from organizator.permissions import IsOrganizator
 from .models import Competition, Participant, Region
-from .serializers import CompetitionSerializer, ParticipantSerializer, UpdateCompetitionSerializer, RegisterStudentSerializer, RegionSerializer, CreateParticipantSerializer
+from .serializers import CompetitionSerializer, ParticipantSerializer, UpdateCompetitionSerializer, RegisterStudentSerializer, RegionSerializer, CreateParticipantSerializer, CreateCompetitionSerializer
 from .permissions import IsPresident, IsStudentCoach
 from .utils import generate_tournament_bracket_logic
 
@@ -27,9 +27,14 @@ CATEGORIES = {
 class CompetitionViewsets(viewsets.ModelViewSet):
     queryset = Competition.objects.all().select_related('organizator', 'federation')
     serializer_class = CompetitionSerializer
-    # http_method_names = ['get', 'post', 'patch', 'delete']
     http_method_names = ['get', 'patch', 'post']
 
+
+    def get_serializer_class(self):
+        if self.action in ['create']:
+            return CreateCompetitionSerializer
+        return CompetitionSerializer
+    
     @extend_schema(
         summary='List competitions based on the region parameter',
         description="""List competitions based on the region parameter. If NO parameters, then it would show ONLY the republic competitions
@@ -138,14 +143,14 @@ class CompetitionViewsets(viewsets.ModelViewSet):
         serializer = RegisterStudentSerializer(data=request.data, context={'competition': competition})
         serializer.is_valid(raise_exception=True)
 
-        student_id = serializer.validated_data.get('student_id')
+        student = serializer.validated_data.get('student')
         age_category = serializer.validated_data.get('age_category')
         weight_category = serializer.validated_data.get('weight_category')
 
         print(f"Competition id {competition.id}")
         
         participant_data = {
-            'student_info': student_id,
+            'student_info': student,
             'age_category': age_category,
             'weight_category': weight_category,
             'competition': competition.id
@@ -209,17 +214,19 @@ class CompetitionViewsets(viewsets.ModelViewSet):
         age_category = request.query_params.get('age')
         weight_category = request.query_params.get('weight')
         level = request.query_params.get('level')
-        games = Game.objects.filter(competition=competition).select_related('red_corner__student_info', 'blue_corner__student_info',
+
+        filters = Q(competition=competition)
+        if age_category:
+            filters &= Q(age_category=age_category)
+        if weight_category:
+            filters &= Q(weight_category=weight_category)
+        if level:
+            filters &= Q(level=level)
+
+        games = Game.objects.filter(filters).select_related('red_corner__student_info', 'blue_corner__student_info',
                                           'red_corner__student_info__coach', 'blue_corner__student_info__coach',
                                           'red_corner__student_info__club', 'blue_corner__student_info__club').order_by('index')
 
-        if age_category and weight_category and level:
-            games = Game.objects.filter(
-                    Q(age_category=age_category) & 
-                    Q(weight_category=weight_category) &
-                    Q(level=level) 
-                )
-            
         serializer = ListGameSerializer(games, many=True)
         return Response({"data": serializer.data}, status=status.HTTP_200_OK)
         

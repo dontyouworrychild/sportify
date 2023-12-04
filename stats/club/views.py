@@ -11,7 +11,7 @@ class ClubViewsets(viewsets.ModelViewSet):
     queryset = Club.objects.all()
     serializer_class = ClubSerializer
     permission_classes = [AllowAny]
-    http_method_names = ['get', 'list']
+    http_method_names = ['get', 'list', 'post']
     
     
     def get(self, request, *args, **kwargs):

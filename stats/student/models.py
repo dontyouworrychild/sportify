@@ -16,7 +16,7 @@ class Student(models.Model):
     image = models.ImageField(upload_to=student_directory_path, blank=True)
     coach = models.ForeignKey(Coach, verbose_name=_('coach'), related_name='students', null=True, on_delete=models.SET_NULL)
     club = models.ForeignKey(Club, verbose_name=_('club'), related_name='students', null=True, on_delete=models.SET_NULL)
-    date_of_birth = models.DateField(blank=True, null=True, default=datetime.date(2000, 1, 1))
+    date_of_birth = models.DateField()
     achievement = models.CharField(blank=True, null=True)
 
     # Пока что пусь location осылай бола берсын, но в целом, 
@@ -33,7 +33,9 @@ class Student(models.Model):
         verbose_name_plural = _("students")
 
     def __str__(self) -> str:
-        return f"{self.first_name} {self.last_name} - ({self.club.name}, {self.club.location})"
+        if self.club:
+            return f"{self.first_name} {self.last_name} - ({self.club.name}, {self.club.location})"
+        return f"{self.first_name} {self.last_name}"
 
 def year_choices():
     return [(r,r) for r in range(1984, datetime.date.today().year+1)]

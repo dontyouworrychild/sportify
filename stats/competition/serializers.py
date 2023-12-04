@@ -18,6 +18,7 @@ class RegionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Region
         fields = [
+            "id",
             "slug",
             "region",
             "image"
@@ -27,6 +28,7 @@ class ListFederationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Federation
         fields = [
+            "id",
             "name"
         ]
 
@@ -59,6 +61,23 @@ class CompetitionSerializer(serializers.ModelSerializer):
     def get_region(self, obj):
         # This method returns the string representation of the region
         return obj.region.region if obj.region else None
+    
+class CreateCompetitionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Competition
+        fields = [
+            "id",
+            "name",
+            "start_date",
+            "end_date",
+            "organizator",
+            "location",
+            "address",
+            "federation",
+            "competition_type",
+            "region"
+        ]
 
 class ListNameCompetitionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -104,7 +123,7 @@ class CreateParticipantSerializer(serializers.ModelSerializer):
 
 
 class RegisterStudentSerializer(serializers.Serializer):
-    student_id = serializers.UUIDField()
+    student = serializers.UUIDField()
     age_category = serializers.CharField()
     weight_category = serializers.CharField()
 
@@ -115,10 +134,10 @@ class RegisterStudentSerializer(serializers.Serializer):
             "competition",
             "age_category",
             "weight_category",
-            "student_id",
+            "student",
         ]
 
-    def validate_student_id(self, value):
+    def validate_student(self, value):
         competition = self.context.get('competition')
         if competition.participants.filter(student_info_id=value).exists():
             raise serializers.ValidationError("Student is already registered for this competition.")

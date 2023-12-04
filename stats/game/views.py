@@ -87,7 +87,7 @@ class GameViewsets(viewsets.ModelViewSet):
                 winner.student_info.achievement = "Мастер спорты"
             else:
                 winner.student_info.achievement = "Мастер спортына үміткер"
-            winner.student_info.achievement.save()
+            winner.student_info.save()
         return Response({"message": "Winner selected successfully", "data": game_serializer.data}, status=status.HTTP_200_OK)
 
     def get_participant(self, participant_id):

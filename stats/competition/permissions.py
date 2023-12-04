@@ -36,6 +36,6 @@ class IsStudentCoach(permissions.BasePermission):
 
         coach = get_object_or_404(Coach, id=request.user.id)
 
-        student_id = request.data.get('student_id', None)
+        student = request.data.get('student', None)
 
-        return Student.objects.filter(id=student_id, coach=coach).exists()
+        return Student.objects.filter(id=student, coach=coach).exists()

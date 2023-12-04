@@ -2,6 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from django.db import models
 from user.models import User
 from club.models import Club
+from django.contrib.auth.hashers import make_password
 
 def coach_directory_path(instance, filename):
     extension = filename.split(".")[-1]
@@ -19,10 +20,13 @@ class Coach(User):
         verbose_name = _("coach")
         verbose_name_plural = _("coaches")
 
-    def __str__(self) -> str:
-        return f"{self.first_name} {self.last_name} - ({self.club.name}, {self.club.location})"
+    def validate_password(self, value: str) -> str:
+        return make_password(value)
+
+    # def __str__(self) -> str:
+        # return f"{self.first_name} {self.last_name} - ({self.club.name}, {self.club.location})"
 
     def save(self, *args, **kwargs):
         self.role = "coach"
+        self.password = self.validate_password(self.password)
         super().save(*args, **kwargs)
-    

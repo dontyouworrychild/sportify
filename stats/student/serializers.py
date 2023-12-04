@@ -35,7 +35,6 @@ class UpdateStudentSerializer(serializers.ModelSerializer):
         ]
 
 class StudentProfileSerializer(serializers.ModelSerializer):
-    is_republic_winner = serializers.SerializerMethodField()
     club = ClubSerializer(read_only=True)
     coach = ListCoachForStudentSerializer(read_only=True)
     class Meta:
@@ -50,11 +49,19 @@ class StudentProfileSerializer(serializers.ModelSerializer):
             "coach",
             "date_of_birth",
             "achievement",
-            "is_republic_winner",
         ]
 
-    def get_is_republic_winner(self, obj):
-        """
-        Check if the student is a winner in the LastRepublicWinner.
-        """
-        return LastRepublicWinner.objects.filter(student=obj).exists()
+class CreateStudentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Student
+        fields = [
+            "id",
+            "first_name",
+            "last_name",
+            "image",
+            "club",
+            "location",
+            "coach",
+            "date_of_birth",
+            "achievement",
+        ]

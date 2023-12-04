@@ -12,6 +12,7 @@ class OrganizatorSerializer(serializers.ModelSerializer):
             "username",
             "image",
             "phone_number",
+            "password",
             "role",
         ]
 

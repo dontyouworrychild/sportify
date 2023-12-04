@@ -10,6 +10,7 @@ from django.core.validators import RegexValidator
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.auth.base_user import BaseUserManager
+from django.contrib.auth.hashers import make_password
 
 
 from .managers import CustomUserManager
@@ -64,6 +65,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self) -> str:
         return f"{self.username}: {self.role}"
+    
+    def validate_password(self, value: str) -> str:
+        return make_password(value)
     
     def delete_image(self):
         if self.image:
