@@ -5,7 +5,7 @@ import random
 
 from scripts_data import clubs, coaches, organizators, regions, federations, competitions, students, CATEGORIES
 
-url = "http://127.0.0.1:8000"
+url = "http://77.243.80.52:8000"
 auth_url = f"{url}/api/v1/auth/login/"
 club_url = f"{url}/api/v1/clubs/"
 coach_url = f"{url}/api/v1/coaches/"
