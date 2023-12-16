@@ -21,12 +21,13 @@ class CoachSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "username",
-            "password",
+            # "password",
             "first_name",
             "last_name",
             "image",
             "club",
             "location",
+            "achievement",
             "phone_number",
             "role",
             "students"

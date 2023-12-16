@@ -285,12 +285,19 @@ def handle_upload_coaches():
     }
     directory_path = 'scripting_images'
 
+    used_indexes = []
+
     for coach in coaches:
         club = None
         club_response = requests.get(club_url)
         if club_response.status_code == 200:
             clubs = club_response.json()
-            random_index = random.randint(0, len(clubs) - 1)
+            random_index = 0
+
+            while random.randint(0, len(clubs) - 1) not in used_indexes:
+                random_index = random.randint(0, len(clubs) - 1)
+                used_indexes.append(random_index)
+
             club = clubs[random_index]
             response = upload_coach(coach, club, headers, directory_path, coach_url)
     

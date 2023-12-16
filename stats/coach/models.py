@@ -14,6 +14,7 @@ class Coach(User):
     # Пока что пусь location осылай бола берсын, но в целом, 
     # бир определнный списоктын ишиндегы биреуын тандау керек
     location = models.CharField(_("location"), max_length=50)
+    achievement = models.CharField(_("achievement"), blank=True, null=True, max_length=50)
 
 
     class Meta:
