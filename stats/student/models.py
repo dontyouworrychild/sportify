@@ -18,6 +18,7 @@ class Student(models.Model):
     club = models.ForeignKey(Club, verbose_name=_('club'), related_name='students', null=True, on_delete=models.SET_NULL)
     date_of_birth = models.DateField()
     achievement = models.CharField(blank=True, null=True)
+    last_republic_result = models.CharField(blank=True, null=True)
 
     # Пока что пусь location осылай бола берсын, но в целом, 
     # бир определнный списоктын ишиндегы биреуын тандау керек

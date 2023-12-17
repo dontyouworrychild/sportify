@@ -49,6 +49,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
             "coach",
             "date_of_birth",
             "achievement",
+            "last_republic_result"
         ]
 
 class CreateStudentSerializer(serializers.ModelSerializer):
