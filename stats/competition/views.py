@@ -10,7 +10,7 @@ from game.serializers import ListGameSerializer
 from organizator.permissions import IsOrganizator
 from .models import Competition, Participant, Region
 from .serializers import CompetitionSerializer, ParticipantSerializer, UpdateCompetitionSerializer, RegisterStudentSerializer, RegionSerializer, CreateParticipantSerializer, CreateCompetitionSerializer
-from .permissions import IsPresident, IsStudentCoach
+from .permissions import IsPresident, IsStudentCoach, IsCoach
 from .utils import generate_tournament_bracket_logic
 
 CATEGORIES = {
@@ -91,6 +91,8 @@ class CompetitionViewsets(viewsets.ModelViewSet):
             permission_classes = [IsOrganizator, IsPresident]
         elif self.action in ['register_student', 'unregister_student']:
             permission_classes = [IsStudentCoach]
+        elif self.action in ['registered_students']:
+            permission_classes = [IsCoach]
         return [permission() for permission in permission_classes]
     
     @extend_schema(
@@ -156,8 +158,6 @@ class CompetitionViewsets(viewsets.ModelViewSet):
             'competition': competition.id
         }
 
-        print(participant_data)
-
         participant_serializer = CreateParticipantSerializer(data=participant_data)
         participant_serializer.is_valid(raise_exception=True)
         participant_serializer.save()
@@ -183,6 +183,25 @@ class CompetitionViewsets(viewsets.ModelViewSet):
         participant.delete()
         return Response({"message": "Student unregistered successfully."},
                         status=status.HTTP_200_OK)
+    
+    @extend_schema(
+        summary='List coach\'s own registered students to the competition',
+        description='This endpoint allows coaches to see their own registered students',
+    )    
+    @action(detail=True, methods=['get'], url_path='registered_students')
+    def registered_students(self, request, pk=None):
+        """
+        List all registered students for a specific competition.
+        """
+        competition = self.get_object()
+        coach = request.user 
+
+        participants = Participant.objects.filter(competition=competition, student_info__coach=coach)
+        
+        serializer = ParticipantSerializer(participants, many=True)
+
+        return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+    
     
     @extend_schema(
         responses={
