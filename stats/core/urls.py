@@ -24,6 +24,7 @@ urlpatterns = [
     path('api/v1/search/', GlobalSearchAPIView.as_view(), name='global-search'),
     path('api/v1/regions/', RegionAPIView.as_view(), name='regions'),
     path('api/v1/federations/', FederationAPIView.as_view(), name='federations'),
+    path('api/v1/news/', include('news.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # urlpatterns += [

@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'coach.apps.CoachConfig',
     'competition.apps.CompetitionConfig',
     'game.apps.GameConfig',
+    'news.apps.NewsConfig'
 ]
 
 MIDDLEWARE = [
