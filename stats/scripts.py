@@ -78,7 +78,6 @@ def upload_coach(coach_data, club_data, headers, directory_path, url):
             'club': club_data['id'],
             'location': club_data['location']
         }
-        print(data)
         # POST request to create a club with the image and data
         response = requests.post(url, headers=headers, data=data, files=files)
         print(response.json())

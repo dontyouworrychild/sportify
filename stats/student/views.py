@@ -10,7 +10,7 @@ from competition.serializers import ParticipantSerializer, StudentResultsInCompe
 from game.serializers import GameSerializer
 from game.models import Game
 from .models import Student
-from .serializers import StudentSerializer, UpdateStudentSerializer, StudentProfileSerializer, CreateStudentSerializer
+from .serializers import StudentSerializer, UpdateStudentSerializer, StudentProfileSerializer, CreateStudentSerializer, RequestCreateStudentSerializer
 from .permissions import IsStudentCoach, IsCoach
 # from game.serializers import ListStudentLastGamesSerializer
 from competition.serializers import ListNameCompetitionSerializer
@@ -28,7 +28,7 @@ class StudentViewsets(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action in ['create']:
-            return CreateStudentSerializer
+            return RequestCreateStudentSerializer
         return StudentProfileSerializer
 
     def get_permissions(self):
@@ -65,11 +65,14 @@ class StudentViewsets(viewsets.ModelViewSet):
         coach_id = self.request.user.id
         try:
             coach = Coach.objects.get(id=coach_id)
-            student_data = {key: value[0] for key, value in request.data.lists()}
+            # student_data = {key: value[0] for key, value in request.data.lists()}
+            student_data = {key: value[0] if isinstance(value, list) else value for key, value in request.data.items()}
             student_data['location'] = coach.location
             student_data['club'] = coach.club_id
             student_data['coach'] = coach.id
-            serializer = self.get_serializer(data=student_data)
+            # print(student_data)
+            serializer = CreateStudentSerializer(data=student_data)
+            # serializer = self.get_serializer(data=student_data)
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
 

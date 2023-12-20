@@ -52,6 +52,21 @@ class StudentProfileSerializer(serializers.ModelSerializer):
             "last_republic_result"
         ]
 
+class RequestCreateStudentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Student
+        fields = [
+            "id",
+            "first_name",
+            "last_name",
+            "image",
+            # "club",
+            # "location",
+            # "coach",
+            "date_of_birth",
+            # "achievement",
+        ]
+
 class CreateStudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
