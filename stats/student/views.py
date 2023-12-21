@@ -36,7 +36,7 @@ class StudentViewsets(viewsets.ModelViewSet):
             permission_classes = [AllowAny]
         if self.action in ['partial_update', 'update', 'destroy']:
             permission_classes = [IsStudentCoach]
-        elif self.action in ['create']:
+        elif self.action in ['create', 'my_students']:
             permission_classes = [IsCoach]
         return [permission() for permission in permission_classes]
     
@@ -142,3 +142,25 @@ class StudentViewsets(viewsets.ModelViewSet):
         # games = Game.objects.filter(Q(red_corner__in=participants) | Q(blue_corner__in=participants)).order_by('-level')
         serializer = StudentResultsInCompetitionsSerializer(participants, many=True)
         return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['get'], url_name='my_students')
+    def my_students(self, request):
+        # Get the current user's ID
+        coach_id = self.request.user.id
+
+        try:
+            # Ensure the current user is a coach
+            coach = Coach.objects.get(id=coach_id)
+
+            # Get all students related to this coach
+            students = Student.objects.filter(coach=coach)
+
+            # Serialize the data
+            serializer = StudentProfileSerializer(students, many=True)
+
+            # Return the serialized data
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Coach.DoesNotExist:
+            # Handle the case where the user is not a coach
+            return Response({"error": "You are not a registered coach."}, status=status.HTTP_403_FORBIDDEN)
