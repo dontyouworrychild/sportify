@@ -77,3 +77,17 @@ class CoachViewsets(UserViewsets):
         
         return Response({"data": serializer.data}, status=status.HTTP_200_OK)
     
+
+    def get_queryset(self):
+        """
+        Optionally restricts the returned students to a given coach,
+        by filtering against a `club` query parameter in the URL.
+        """
+        queryset = Coach.objects.all()
+        club_name = self.request.query_params.get('club')
+
+        if club_name:
+            # Adjust this line if the lookup field for the club is different in your model.
+            queryset = queryset.filter(club__name=club_name)
+
+        return queryset

@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
@@ -143,24 +144,21 @@ class StudentViewsets(viewsets.ModelViewSet):
         serializer = StudentResultsInCompetitionsSerializer(participants, many=True)
         return Response({"data": serializer.data}, status=status.HTTP_200_OK)
     
-    @action(detail=False, methods=['get'], url_name='my_students')
-    def my_students(self, request):
-        # Get the current user's ID
-        coach_id = self.request.user.id
+    def get_queryset(self):
+        """
+        Optionally restricts the returned students to a given coach,
+        by filtering against a `coach` query parameter in the URL.
+        """
+        queryset = Student.objects.all()
+        coach_username = self.request.query_params.get('coach')
+        club_name = self.request.query_params.get('club')
 
-        try:
-            # Ensure the current user is a coach
-            coach = Coach.objects.get(id=coach_id)
+        if coach_username is not None:
+            coach = get_object_or_404(Coach, username=coach_username)
+            queryset = queryset.filter(coach=coach)
 
-            # Get all students related to this coach
-            students = Student.objects.filter(coach=coach)
+        if club_name:
+            # Adjust this line if the lookup field for the club is different in your model.
+            queryset = queryset.filter(club__name=club_name)
 
-            # Serialize the data
-            serializer = StudentProfileSerializer(students, many=True)
-
-            # Return the serialized data
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
-        except Coach.DoesNotExist:
-            # Handle the case where the user is not a coach
-            return Response({"error": "You are not a registered coach."}, status=status.HTTP_403_FORBIDDEN)
+        return queryset
