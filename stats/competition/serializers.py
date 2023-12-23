@@ -189,3 +189,10 @@ class StudentResultsInCompetitionsSerializer(serializers.ModelSerializer):
             "competition",
             "place"
         ]
+
+
+class ListStudentsForRegistrationSerializer(StudentSerializer):
+    registered = serializers.BooleanField(read_only=True) 
+
+    class Meta(StudentSerializer.Meta):  # Inherit the Meta class from StudentSerializer
+        fields = StudentSerializer.Meta.fields + ['registered']

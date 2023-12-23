@@ -21,7 +21,8 @@ class StudentSerializer(serializers.ModelSerializer):
             "image",
             "club",
             "location",
-            "coach"
+            "coach",
+            "date_of_birth",
         ]
 
 class UpdateStudentSerializer(serializers.ModelSerializer):

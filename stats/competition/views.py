@@ -1,3 +1,4 @@
+from django.db.models import Case, Value, When, BooleanField
 from django.db.models import Q
 from rest_framework import status, viewsets, exceptions, serializers
 from rest_framework.response import Response
@@ -9,7 +10,8 @@ from game.models import Game
 from game.serializers import ListGameSerializer
 from organizator.permissions import IsOrganizator
 from .models import Competition, Participant, Region
-from .serializers import CompetitionSerializer, ParticipantSerializer, UpdateCompetitionSerializer, RegisterStudentSerializer, RegionSerializer, CreateParticipantSerializer, CreateCompetitionSerializer, RegisteredStudentSerializer
+from student.models import Student
+from .serializers import CompetitionSerializer, ParticipantSerializer, UpdateCompetitionSerializer, RegisterStudentSerializer, RegionSerializer, CreateParticipantSerializer, CreateCompetitionSerializer, RegisteredStudentSerializer, ListStudentsForRegistrationSerializer
 from .permissions import IsPresident, IsStudentCoach, IsCoach
 from .utils import generate_tournament_bracket_logic
 
@@ -91,7 +93,7 @@ class CompetitionViewsets(viewsets.ModelViewSet):
             permission_classes = [IsOrganizator, IsPresident]
         elif self.action in ['register_student', 'unregister_student']:
             permission_classes = [IsStudentCoach]
-        elif self.action in ['registered_students']:
+        elif self.action in ['registered_students', 'students']:
             permission_classes = [IsCoach]
         return [permission() for permission in permission_classes]
     
@@ -273,6 +275,75 @@ class CompetitionViewsets(viewsets.ModelViewSet):
             
         serializer = ParticipantSerializer(participants, many=True)
         return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+    
+    # @action(detail=True, methods=['get'], url_name='students')
+    # def students(self, request, pk=None):
+    #     competition = self.get_object()
+    #     coach = self.request.user
+        
+    #     # Get all students of the logged-in coach
+    #     students = Student.objects.filter(coach=coach)
+        
+    #     # Get all participants' student_info ids for the competition
+    #     participant_student_ids = Participant.objects.filter(competition=competition).values_list('student_info_id', flat=True)
+        
+    #     # List to hold the student data
+    #     student_data = []
+        
+    #     for student in students:
+    #         # Determine if the student is registered for the competition
+    #         is_registered = student.id in participant_student_ids
+            
+    #         # Calculate the student's age
+    #         current_year = timezone.now().year
+    #         age = current_year - student.date_of_birth.year
+            
+    #         # Append the student info to the list
+    #         student_info = {
+    #             'id': student.id,
+    #             'name': f"{student.first_name} {student.last_name}",
+    #             'age': f"{age} жас",
+    #             'registered': True if is_registered else False,
+    #         }
+            
+    #         student_data.append(student_info)
+        
+    #     # Serialize the data - create or adjust your serializer to handle the student_data structure
+    #     serializer = StudentSerializer(student_data, many=True)
+        
+    #     return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'], url_name='students')
+    def students(self, request, pk=None):
+        competition = self.get_object()
+        coach = self.request.user
+
+        # Get all students of the logged-in coach
+        students = Student.objects.filter(coach=coach)
+
+        # Annotate the queryset with a 'registered' field
+        students_with_registration = students.annotate(
+            registered=Case(
+                When(id__in=Participant.objects.filter(competition=competition).values_list('student_info_id', flat=True), then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField()
+            )
+        )
+
+        # Serialize the data
+        serializer = ListStudentsForRegistrationSerializer(students_with_registration, many=True)
+
+        return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+        
+
+
+        # age_category = request.query_params.get('age')
+        # participants = Participant.objects.filter(competition=competition, place=1).select_related('student_info', 'student_info__club', 'student_info__coach')
+        # if age_category:
+        #     participants = Participant.objects.filter(competition=competition, place=1, age_category=age_category)
+            
+        # serializer = ParticipantSerializer(participants, many=True)
+        # return Response({"data": serializer.data}, status=status.HTTP_200_OK)
     
 
     @extend_schema(
