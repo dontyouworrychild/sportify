@@ -9,7 +9,7 @@ from game.models import Game
 from game.serializers import ListGameSerializer
 from organizator.permissions import IsOrganizator
 from .models import Competition, Participant, Region
-from .serializers import CompetitionSerializer, ParticipantSerializer, UpdateCompetitionSerializer, RegisterStudentSerializer, RegionSerializer, CreateParticipantSerializer, CreateCompetitionSerializer
+from .serializers import CompetitionSerializer, ParticipantSerializer, UpdateCompetitionSerializer, RegisterStudentSerializer, RegionSerializer, CreateParticipantSerializer, CreateCompetitionSerializer, RegisteredStudentSerializer
 from .permissions import IsPresident, IsStudentCoach, IsCoach
 from .utils import generate_tournament_bracket_logic
 
@@ -198,7 +198,7 @@ class CompetitionViewsets(viewsets.ModelViewSet):
 
         participants = Participant.objects.filter(competition=competition, student_info__coach=coach)
         
-        serializer = ParticipantSerializer(participants, many=True)
+        serializer = RegisteredStudentSerializer(participants, many=True)
 
         return Response({"data": serializer.data}, status=status.HTTP_200_OK)
     

@@ -110,6 +110,19 @@ class ParticipantSerializer(serializers.ModelSerializer):
             "place",
         ]
 
+class RegisteredStudentSerializer(serializers.ModelSerializer):
+    student_info = StudentSerializer(read_only=True)
+
+    class Meta:
+        model = Participant
+        fields = [
+            "id",
+            "student_info",
+            "age_category",
+            "weight_category"
+            # "place",
+        ]
+
 class CreateParticipantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Participant
