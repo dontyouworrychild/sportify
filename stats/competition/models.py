@@ -42,6 +42,8 @@ class Competition(models.Model):
     region = models.ForeignKey(Region, null=True, blank=True, on_delete=models.SET_NULL)
     location = models.CharField(_("location"), max_length=30)
 
+    registration_finished = models.BooleanField(default=False)
+
 
     class Meta:
         verbose_name = _("competition")

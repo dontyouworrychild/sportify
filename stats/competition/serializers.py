@@ -50,7 +50,8 @@ class CompetitionSerializer(serializers.ModelSerializer):
             "address",
             "federation",
             "competition_type",
-            "region"
+            "region",
+            "registration_finished"
         ]
 
     @extend_schema_field(serializers.CharField())
