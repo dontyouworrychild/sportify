@@ -15,7 +15,7 @@ class StudentBasicInfoSerializer(serializers.ModelSerializer):
 
 class CoachSerializer(serializers.ModelSerializer):
     club = ClubSerializer(read_only=True)
-    students = StudentBasicInfoSerializer(many=True, read_only=True)
+    # students = StudentBasicInfoSerializer(many=True, read_only=True)
     class Meta:
         model = Coach
         fields = [
@@ -30,7 +30,7 @@ class CoachSerializer(serializers.ModelSerializer):
             "achievement",
             "phone_number",
             "role",
-            "students"
+            # "students"
         ]
 
         # role degen zatty dobavit' etu kerek
