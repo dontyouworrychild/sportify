@@ -4,6 +4,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+
 
 from .enums import TokenEnum
 from .models import Token, User
@@ -21,6 +23,21 @@ from drf_spectacular.utils import extend_schema
 class CustomObtainTokenPairView(TokenObtainPairView):
     """Authenticate with username and password"""
     serializer_class = CustomObtainTokenPairSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except TokenError as e:
+            raise InvalidToken(e.args[0])
+
+        # Modify the response to include username at the top level
+        response_data = serializer.validated_data
+        user = serializer.user  # Assuming your serializer has 'user' attribute
+        response_data['username'] = user.username
+
+        return Response(response_data)
 
 @extend_schema(tags=['Password'])
 class AuthViewsets(viewsets.GenericViewSet):
